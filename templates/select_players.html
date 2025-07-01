@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="player-selection">
+    <h2>Select Players for {{ game['name'] }}</h2>
+    <form method="post">
+        <fieldset>
+            <legend>Existing Players</legend>
+            <ul class="player-list">
+                {% for player in players %}
+                <li>
+                    <label>
+                        <input type="checkbox" name="players" value="{{ player['id'] }}"> {{ player['name'] }}
+                    </label>
+                </li>
+                {% endfor %}
+            </ul>
+        </fieldset>
+        <fieldset>
+            <legend>Add New Player</legend>
+            <input type="text" name="new_player" placeholder="New player name">
+        </fieldset>
+        <button type="submit" class="button">Continue</button>
+    </form>
+</section>
+{% endblock %} 

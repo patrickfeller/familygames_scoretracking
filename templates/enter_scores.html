@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="score-entry">
+    <h2>Enter Scores for {{ game['name'] }}</h2>
+    <form method="post">
+        <table class="score-table">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in players %}
+                <tr>
+                    <td>{{ player['name'] }}</td>
+                    <td><input type="number" name="score_{{ player['id'] }}" min="0" required></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="button">Finalize & Save</button>
+    </form>
+</section>
+{% endblock %} 

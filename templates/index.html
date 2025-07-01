@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="game-selection">
+    <h2>Select a Game</h2>
+    <ul class="game-list">
+        {% for game in games %}
+        <li>
+            <a class="button" href="{{ url_for('select_players', game_id=game['id']) }}">{{ game['name'] }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %} 
