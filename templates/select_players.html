@@ -1,25 +1,42 @@
 {% extends 'base.html' %}
 {% block content %}
+
 <section class="player-selection">
     <h2>Select Players for {{ game['name'] }}</h2>
-    <form method="post">
-        <fieldset>
-            <legend>Existing Players</legend>
-            <ul class="player-list">
+
+    <div class="player-lists-container">
+        <div class="player-list-box">
+            <h3>Available Players</h3>
+            <ul id="availablePlayers" class="player-list">
                 {% for player in players %}
-                <li>
-                    <label>
-                        <input type="checkbox" name="players" value="{{ player['id'] }}"> {{ player['name'] }}
-                    </label>
-                </li>
+                <li draggable="true" data-player-id="{{ player['id'] }}">{{ player['name'] }}</li>
                 {% endfor %}
             </ul>
-        </fieldset>
-        <fieldset>
-            <legend>Add New Player</legend>
-            <input type="text" name="new_player" placeholder="New player name">
-        </fieldset>
-        <button type="submit" class="button">Continue</button>
-    </form>
+        </div>
+
+        <div class="player-list-box">
+            <h3>Selected Players (Drag to reorder)</h3>
+            <ul id="selectedPlayers" class="player-list">
+                <!-- Selected players will be dragged here -->
+            </ul>
+        </div>
+    </div>
+
+    <div class="continue-button-container">
+        <form id="selectPlayersForm" method="post">
+            <input type="hidden" name="selected_player_ids" id="selectedPlayerIdsInput">
+            <button type="submit" class="button">Continue with Selected Players</button>
+        </form>
+    </div>
+
+    <div class="add-player-section">
+        <h3>Add New Player</h3>
+        <form id="addPlayerForm" method="post" action="{{ url_for('select_players', game_id=game['id']) }}">
+            <input type="text" name="new_player_name" placeholder="New player name" required>
+            <button type="submit" name="action" value="add_player">Add Player</button>
+        </form>
+    </div>
 </section>
-{% endblock %} 
+
+<script src="{{ url_for('static', filename='select_players.js') }}"></script>
+{% endblock %}

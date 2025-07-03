@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="enter-scores">
+    <h2>Enter Scores for {{ game.name }}</h2>
+    <form id="triominos-form" action="{{ url_for('enter_scores', game_id=game.id, player_ids=player_ids) }}" method="POST">
+        <div class="score-table-container">
+            <table id="triominos-score-table">
+                <thead>
+                    <tr>
+                        <th>Round</th>
+                        {% for player in players %}
+                        <th>{{ player.name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-round="1">
+                        <td>1</td>
+                        {% for player in players %}
+                        <td><input type="number" name="score_{{ player.id }}_1" value="0" required></td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td><strong>Total</strong></td>
+                        {% for player in players %}
+                        <td id="total_score_{{ player.id }}">0</td>
+                        {% endfor %}
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <button type="button" id="add-round-button">Add Round</button>
+        <button type="submit">Save Scores</button>
+    </form>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM Content Loaded.');
+        let roundCount = 1;
+        const scoreTableBody = document.querySelector('#triominos-score-table tbody');
+        const addRoundButton = document.getElementById('add-round-button');
+        const scoreTable = document.getElementById('triominos-score-table');
+        const triominosForm = document.getElementById('triominos-form');
+
+        // Get player IDs from the template context
+        let playerIds = [];
+        try {
+            const playerIdsString = "{{ player_ids }}";
+            if (playerIdsString) {
+                playerIds = playerIdsString.split(',').map(id => parseInt(id)).filter(id => !isNaN(id));
+            }
+            console.log('Parsed playerIds:', playerIds);
+            if (playerIds.length === 0) {
+                console.warn('playerIds array is empty. Check player_ids passed to template.');
+            }
+        } catch (error) {
+            console.error('Error parsing player_ids:', error);
+        }
+
+        function updateTotals() {
+            try {
+                console.log('Updating totals...');
+                playerIds.forEach(playerId => {
+                    let playerTotal = 0;
+                    scoreTable.querySelectorAll(`input[name^="score_${playerId}_"`).forEach(input => {
+                        playerTotal += parseInt(input.value) || 0;
+                    });
+                    const totalElement = document.getElementById(`total_score_${playerId}`);
+                    if (totalElement) {
+                        totalElement.textContent = playerTotal;
+                    } else {
+                        console.warn(`Total element for player ${playerId} not found.`);
+                    }
+                });
+                console.log('Totals updated.');
+            } catch (error) {
+                console.error('Error in updateTotals:', error);
+            }
+        }
+
+        // Initial total calculation
+        updateTotals();
+
+        if (addRoundButton) {
+            addRoundButton.addEventListener('click', function() {
+                try {
+                    console.log('Add Round button clicked!');
+                    roundCount++;
+                    const newRow = document.createElement('tr');
+                    newRow.dataset.round = roundCount;
+
+                    const roundCell = document.createElement('td');
+                    roundCell.textContent = roundCount;
+                    newRow.appendChild(roundCell);
+
+                    playerIds.forEach(playerId => {
+                        const playerCell = document.createElement('td');
+                        const input = document.createElement('input');
+                        input.type = 'number';
+                        input.name = `score_${playerId}_${roundCount}`;
+                        input.value = '0';
+                        input.required = true;
+                        input.addEventListener('input', updateTotals); // Add event listener immediately
+                        playerCell.appendChild(input);
+                        newRow.appendChild(playerCell);
+                    });
+
+                    scoreTableBody.appendChild(newRow);
+                    updateTotals(); // Update totals after adding a new row
+                    console.log(`Added round ${roundCount}`);
+                } catch (error) {
+                    console.error('Error in Add Round button click handler:', error);
+                }
+            });
+        } else {
+            console.error('Add Round button not found!');
+        }
+
+        // Add event listeners to initial inputs
+        scoreTable.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('input', updateTotals);
+        });
+
+        // Add submit event listener to the form
+        if (triominosForm) {
+            triominosForm.addEventListener('submit', function(event) {
+                console.log('Form submitted!');
+                // You can add more debugging here if needed
+            });
+        } else {
+            console.error('Triominos form not found!');
+        }
+    });
+</script>
+{% endblock %}

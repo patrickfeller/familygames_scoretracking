@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="score-history">
+    <h2>Score History</h2>
+    <table class="score-table">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Game</th>
+                <th>Player</th>
+                <th>Score</th>
+                <th>Total Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in history %}
+            <tr>
+                <td>{{ entry['timestamp'] }}</td>
+                <td>{{ entry['game_name'] }}</td>
+                <td>{{ entry['player_name'] }}</td>
+                <td>{{ entry['score'] }}</td>
+                <td>{{ entry['total_score'] if entry['total_score'] is not none else 'N/A' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">No scores recorded yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a class="button" href="{{ url_for('index') }}">Back to Home</a>
+</section>
+{% endblock %} 

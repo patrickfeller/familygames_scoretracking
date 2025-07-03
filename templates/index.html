@@ -2,12 +2,13 @@
 {% block content %}
 <section class="game-selection">
     <h2>Select a Game</h2>
-    <ul class="game-list">
+    <div class="game-grid">
         {% for game in games %}
-        <li>
-            <a class="button" href="{{ url_for('select_players', game_id=game['id']) }}">{{ game['name'] }}</a>
-        </li>
+        <a href="{{ url_for('select_players', game_id=game['id']) }}" class="game-tile">
+            <img src="{{ url_for('static', filename='images/' + game.logo_filename) }}" alt="{{ game.name }} Logo" class="game-logo">
+            <h3>{{ game['name'] }}</h3>
+        </a>
         {% endfor %}
-    </ul>
+    </div>
 </section>
 {% endblock %} 
