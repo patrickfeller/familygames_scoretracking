@@ -355,3 +355,27 @@ footer {
 .continue-button-container button:hover {
     background-color: #0056b3;
 }
+
+.text-red {
+    color: red;
+}
+
+/* Yahtzee Table Highlighting */
+.highlighted-row {
+    background-color: #e6f7ff !important; /* Light blue for row highlight */
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.highlighted-col {
+    background-color: #e6ffe6 !important; /* Light green for column highlight */
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.highlighted-cell {
+    background-color: #fffacd !important; /* Light yellow for cell highlight */
+    font-weight: bolder;
+    font-size: 1.2em;
+    outline: 2px solid #ffcc00; /* A border to make it stand out more */
+}

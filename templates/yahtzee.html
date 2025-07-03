@@ -11,43 +11,45 @@
                     <tr>
                         <th>Category</th>
                         {% for player in players %}
-                        <th>{{ player['name'] }}</th>
+                        <th data-col="{{ loop.index0 }}">{{ player['name'] }}</th>
                         {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for category in ['Ones', 'Twos', 'Threes', 'Fours', 'Fives', 'Sixes'] %}
-                    <tr>
+                    <tr data-row="{{ loop.index0 }}">
                         <td>{{ category }}</td>
+                        {% set current_row_index = loop.index0 %}
                         {% for player in players %}
-                        <td><input type="number" name="{{ player['id'] }}_{{ category.lower() }}" data-player="{{ player['id'] }}" data-category="upper" class="form-control score-input" min="0"></td>
+                        <td><input type="number" name="{{ player['id'] }}_{{ category.lower() }}" data-player="{{ player['id'] }}" data-category="upper" class="form-control score-input" min="0" data-row="{{ current_row_index }}" data-col="{{ loop.index0 }}"></td>
                         {% endfor %}
                     </tr>
                     {% endfor %}
                     <tr class="table-info">
                         <td>Subtotal</td>
                         {% for player in players %}
-                        <td id="subtotal-{{ player['id'] }}" class="text-center">0</td>
+                        <td id="subtotal-{{ player['id'] }}" class="text-center" data-col="{{ loop.index0 }}">0</td>
                         {% endfor %}
                     </tr>
                     <tr class="table-info">
                         <td>Bonus (+35 if >62)</td>
                         {% for player in players %}
-                        <td id="bonus-{{ player['id'] }}" class="text-center">0</td>
+                        <td id="bonus-{{ player['id'] }}" class="text-center" data-col="{{ loop.index0 }}">0</td>
                         {% endfor %}
                     </tr>
                     {% for category in ['One Pair', 'Two Pair', 'Three of a Kind', 'Four of a Kind', 'Full House', 'Small Straight', 'Large Straight', 'Chance', 'Yahtzee'] %}
-                    <tr>
+                    <tr data-row="{{ loop.index0 + 6 }}"> {# +6 to account for upper section categories and subtotal/bonus rows #}
                         <td>{{ category }}</td>
+                        {% set current_row_index = loop.index0 + 6 %}
                         {% for player in players %}
-                        <td><input type="number" name="{{ player['id'] }}_{{ category.lower().replace(' ', '_') }}" data-player="{{ player['id'] }}" data-category="lower" class="form-control score-input" min="0"></td>
+                        <td><input type="number" name="{{ player['id'] }}_{{ category.lower().replace(' ', '_') }}" data-player="{{ player['id'] }}" data-category="lower" class="form-control score-input" min="0" data-row="{{ current_row_index }}" data-col="{{ loop.index0 }}"></td>
                         {% endfor %}
                     </tr>
                     {% endfor %}
                     <tr class="table-primary">
                         <td><strong>Total</strong></td>
                         {% for player in players %}
-                        <td id="total-{{ player['id'] }}" class="text-center"><strong>0</strong></td>
+                        <td id="total-{{ player['id'] }}" class="text-center" data-col="{{ loop.index0 }}"><strong>0</strong></td>
                         {% endfor %}
                     </tr>
                 </tbody>
@@ -57,38 +59,5 @@
     </form>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const scoreInputs = document.querySelectorAll('.score-input');
-
-    scoreInputs.forEach(input => {
-        input.addEventListener('input', function() {
-            const playerId = this.dataset.player;
-            calculateTotals(playerId);
-        });
-    });
-
-    function calculateTotals(playerId) {
-        let upperScore = 0;
-        document.querySelectorAll(`input[data-player='${playerId}'][data-category='upper']`).forEach(input => {
-            upperScore += parseInt(input.value) || 0;
-        });
-
-        let lowerScore = 0;
-        document.querySelectorAll(`input[data-player='${playerId}'][data-category='lower']`).forEach(input => {
-            lowerScore += parseInt(input.value) || 0;
-        });
-
-        const subtotalCell = document.getElementById(`subtotal-${playerId}`);
-        subtotalCell.textContent = upperScore;
-
-        const bonusCell = document.getElementById(`bonus-${playerId}`);
-        const bonus = upperScore >= 63 ? 35 : 0;
-        bonusCell.textContent = bonus;
-
-        const totalCell = document.getElementById(`total-${playerId}`);
-        totalCell.innerHTML = `<strong>${upperScore + bonus + lowerScore}</strong>`;
-    }
-});
-</script>
+<script src="{{ url_for('static', filename='yahtzee.js') }}"></script>
 {% endblock %}
