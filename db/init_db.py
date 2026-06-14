@@ -1,59 +1,48 @@
-import sqlite3
 import os
 
-DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'familygame.db')
+import psycopg2
+from dotenv import load_dotenv
 
-def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''
+
+def init_db(conn):
+    cur = conn.cursor()
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS players (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT NOT NULL UNIQUE
         )
     ''')
-    c.execute('''
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS games (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT NOT NULL UNIQUE
         )
     ''')
-    c.execute('''
+    cur.execute('''
         CREATE TABLE IF NOT EXISTS scores (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            game_id INTEGER NOT NULL,
-            player_id INTEGER NOT NULL,
+            id SERIAL PRIMARY KEY,
+            game_id INTEGER NOT NULL REFERENCES games(id),
+            player_id INTEGER NOT NULL REFERENCES players(id),
             score INTEGER NOT NULL,
             total_score INTEGER,
             session_id TEXT NOT NULL,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (game_id) REFERENCES games(id),
-            FOREIGN KEY (player_id) REFERENCES players(id)
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-
-    # Add total_score column if it doesn't exist
-    try:
-        c.execute('ALTER TABLE scores ADD COLUMN total_score INTEGER')
-    except sqlite3.OperationalError:
-        pass  # Column already exists
-
-    # Add session_id column if it doesn't exist
-    try:
-        c.execute('ALTER TABLE scores ADD COLUMN session_id TEXT')
-    except sqlite3.OperationalError:
-        pass  # Column already exists
-
     conn.commit()
-    conn.close()
+    cur.close()
+
 
 if __name__ == '__main__':
-    init_db()
+    load_dotenv()
+    conn = psycopg2.connect(os.environ['DATABASE_URL'])
+    init_db(conn)
     print('Database initialized.')
-    # Print all games for debug
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
+
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM games')
     print('Games in DB:')
-    for row in c.execute('SELECT * FROM games'):
+    for row in cur.fetchall():
         print(row)
-    conn.close() 
+    cur.close()
+    conn.close()

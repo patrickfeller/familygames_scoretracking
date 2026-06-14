@@ -1,82 +1,46 @@
 import unittest
-import os
-import sqlite3
-from datetime import datetime
 import uuid
-from app import app, get_db_connection, add_player, add_score
+
+import psycopg2
+from psycopg2 import sql
+
+from app import app, get_db_connection, query_db, execute_db, add_player, add_score
+from db.init_db import init_db
 from games.uno import UnoGame
 from games.yahtzee import YahtzeeGame
 
-# Set up a test database
-TEST_DB_PATH = os.path.join(os.path.dirname(__file__), 'test_familygame.db')
+TEST_SCHEMA = 'test'
+
 
 class TestGameLogic(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # Ensure a clean test database before all tests
-        if os.path.exists(TEST_DB_PATH):
-            os.remove(TEST_DB_PATH)
         cls.app = app.test_client()
         cls.app.testing = True
-        cls.conn = sqlite3.connect(TEST_DB_PATH)
-        cls.conn.row_factory = sqlite3.Row
-        cls.cursor = cls.conn.cursor()
-        cls.create_test_tables()
+        app.config['DB_SCHEMA'] = TEST_SCHEMA
+
+        conn = psycopg2.connect(app.config['DATABASE_URL'])
+        cur = conn.cursor()
+        cur.execute(sql.SQL('CREATE SCHEMA IF NOT EXISTS {}').format(sql.Identifier(TEST_SCHEMA)))
+        cur.execute(sql.SQL('SET search_path TO {}').format(sql.Identifier(TEST_SCHEMA)))
+        conn.commit()
+        init_db(conn)
+        cur.close()
+        conn.close()
 
     @classmethod
     def tearDownClass(cls):
-        cls.conn.close()
-        if os.path.exists(TEST_DB_PATH):
-            os.remove(TEST_DB_PATH)
-
-    @staticmethod
-    def create_test_tables():
-        conn = sqlite3.connect(TEST_DB_PATH)
-        c = conn.cursor()
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS players (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE
-            )
-        ''')
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS games (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE
-            )
-        ''')
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS scores (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                game_id INTEGER NOT NULL,
-                player_id INTEGER NOT NULL,
-                score INTEGER NOT NULL,
-                total_score INTEGER,
-                session_id TEXT,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (game_id) REFERENCES games(id),
-                FOREIGN KEY (player_id) REFERENCES players(id)
-            )
-        ''')
-        conn.commit()
-        conn.close()
+        del app.config['DB_SCHEMA']
 
     def setUp(self):
-        # Clear tables before each test
-        conn = sqlite3.connect(TEST_DB_PATH)
-        c = conn.cursor()
-        c.execute('DELETE FROM players')
-        c.execute('DELETE FROM games')
-        c.execute('DELETE FROM scores')
+        # Clear tables before each test (scores first: FK references games/players)
+        conn = get_db_connection()
+        execute_db(conn, 'DELETE FROM scores')
+        execute_db(conn, 'DELETE FROM players')
+        execute_db(conn, 'DELETE FROM games')
         conn.commit()
         conn.close()
-
-        # Override DB_PATH for testing
-        app.config['DB_PATH'] = TEST_DB_PATH
-
-    def tearDown(self):
-        pass # DB_PATH is set in setUp and doesn't need to be restored
 
     def test_uno_game_process_scores_valid(self):
         uno_game = UnoGame()
@@ -84,7 +48,7 @@ class TestGameLogic(unittest.TestCase):
         add_player('Alice')
         add_player('Bob')
         conn = get_db_connection()
-        players = conn.execute('SELECT * FROM players').fetchall()
+        players = query_db(conn, 'SELECT * FROM players')
         conn.close()
 
         form_data = {
@@ -104,7 +68,7 @@ class TestGameLogic(unittest.TestCase):
         add_player('Alice')
         add_player('Bob')
         conn = get_db_connection()
-        players = conn.execute('SELECT * FROM players').fetchall()
+        players = query_db(conn, 'SELECT * FROM players')
         conn.close()
 
         form_data = {
@@ -121,7 +85,7 @@ class TestGameLogic(unittest.TestCase):
         add_player('Alice')
         add_player('Bob')
         conn = get_db_connection()
-        players = conn.execute('SELECT * FROM players').fetchall()
+        players = query_db(conn, 'SELECT * FROM players')
         conn.close()
 
         form_data = {
@@ -141,48 +105,49 @@ class TestGameLogic(unittest.TestCase):
             'full_house': '25', 'small_straight': '30', 'large_straight': '40', 'chance': '20', 'yahtzee': '50'
         }
         total_score = yahtzee_game.calculate_score(form_data)
-        print(f"Yahtzee Test 1: Calculated Total Score: {total_score}")
         # Expected: (1+2+3+4+5+6) + 35 (bonus) + (10+12+15+20+25+30+40+20+50) = 21 + 35 + 222 = 278
         self.assertEqual(total_score, 278)
 
     def test_yahtzee_game_calculate_score_with_bonus(self):
         yahtzee_game = YahtzeeGame()
         form_data = {
-            'ones': '6', 'twos': '6', 'threes': '6', 'fours': '6', 'fives': '6', 'sixes': '6', # 36 points each, total 216
+            'ones': '6', 'twos': '6', 'threes': '6', 'fours': '6', 'fives': '6', 'sixes': '6',  # 36 points each, total 216
             'one_pair': '0', 'two_pair': '0', 'three_of_a_kind': '0', 'four_of_a_kind': '0',
             'full_house': '0', 'small_straight': '0', 'large_straight': '0', 'chance': '0', 'yahtzee': '0'
         }
         total_score = yahtzee_game.calculate_score(form_data)
-        print(f"Yahtzee Test 2: Calculated Total Score: {total_score}")
         # Expected: 216 (upper) + 35 (bonus) = 251
         self.assertEqual(total_score, 251)
 
     def test_add_player(self):
         add_player('Charlie')
         conn = get_db_connection()
-        player = conn.execute('SELECT * FROM players WHERE name = "Charlie"').fetchone()
+        player = query_db(conn, 'SELECT * FROM players WHERE name = %s', ('Charlie',), one=True)
         conn.close()
         self.assertIsNotNone(player)
         self.assertEqual(player['name'], 'Charlie')
 
     def test_add_player_duplicate(self):
         add_player('David')
-        add_player('David') # Try to add again
+        add_player('David')  # Try to add again
         conn = get_db_connection()
-        players = conn.execute('SELECT * FROM players WHERE name = "David"').fetchall()
+        players = query_db(conn, 'SELECT * FROM players WHERE name = %s', ('David',))
         conn.close()
-        self.assertEqual(len(players), 1) # Should only be one entry
+        self.assertEqual(len(players), 1)  # Should only be one entry
 
     def test_add_score(self):
         # Add game and player
         conn = get_db_connection()
-        conn.execute('INSERT INTO games (name) VALUES (?)', ('Test Game',))
-        game_id = conn.execute('SELECT id FROM games WHERE name = "Test Game"').fetchone()[0]
+        execute_db(conn, 'INSERT INTO games (name) VALUES (%s)', ('Test Game',))
+        conn.commit()
+        game = query_db(conn, 'SELECT id FROM games WHERE name = %s', ('Test Game',), one=True)
+        game_id = game['id']
         conn.close()
 
         add_player('Eve')
         conn = get_db_connection()
-        player_id = conn.execute('SELECT id FROM players WHERE name = "Eve"').fetchone()[0]
+        player = query_db(conn, 'SELECT id FROM players WHERE name = %s', ('Eve',), one=True)
+        player_id = player['id']
         conn.close()
 
         player_scores_map = {player_id: 100}
@@ -191,7 +156,12 @@ class TestGameLogic(unittest.TestCase):
         add_score(game_id, player_scores_map, session_id, player_total_scores_map)
 
         conn = get_db_connection()
-        score_entry = conn.execute('SELECT * FROM scores WHERE game_id = ? AND player_id = ? AND session_id = ?', (game_id, player_id, session_id)).fetchone()
+        score_entry = query_db(
+            conn,
+            'SELECT * FROM scores WHERE game_id = %s AND player_id = %s AND session_id = %s',
+            (game_id, player_id, session_id),
+            one=True
+        )
         conn.close()
 
         self.assertIsNotNone(score_entry)
@@ -203,21 +173,29 @@ class TestGameLogic(unittest.TestCase):
     def test_add_score_no_total_score(self):
         # Add game and player
         conn = get_db_connection()
-        conn.execute('INSERT INTO games (name) VALUES (?)', ('Another Game',))
-        game_id = conn.execute('SELECT id FROM games WHERE name = "Another Game"').fetchone()[0]
+        execute_db(conn, 'INSERT INTO games (name) VALUES (%s)', ('Another Game',))
+        conn.commit()
+        game = query_db(conn, 'SELECT id FROM games WHERE name = %s', ('Another Game',), one=True)
+        game_id = game['id']
         conn.close()
 
         add_player('Frank')
         conn = get_db_connection()
-        player_id = conn.execute('SELECT id FROM players WHERE name = "Frank"').fetchone()[0]
+        player = query_db(conn, 'SELECT id FROM players WHERE name = %s', ('Frank',), one=True)
+        player_id = player['id']
         conn.close()
 
         player_scores_map = {player_id: 50}
         session_id = str(uuid.uuid4())
-        add_score(game_id, player_scores_map, session_id) # No total_score_map
+        add_score(game_id, player_scores_map, session_id)  # No total_score_map
 
         conn = get_db_connection()
-        score_entry = conn.execute('SELECT * FROM scores WHERE game_id = ? AND player_id = ? AND session_id = ?', (game_id, player_id, session_id)).fetchone()
+        score_entry = query_db(
+            conn,
+            'SELECT * FROM scores WHERE game_id = %s AND player_id = %s AND session_id = %s',
+            (game_id, player_id, session_id),
+            one=True
+        )
         conn.close()
 
         self.assertIsNotNone(score_entry)
@@ -225,6 +203,7 @@ class TestGameLogic(unittest.TestCase):
         self.assertIsNone(score_entry['total_score'])
         self.assertEqual(score_entry['session_id'], session_id)
         self.assertIsNotNone(score_entry['timestamp'])
+
 
 if __name__ == '__main__':
     unittest.main()

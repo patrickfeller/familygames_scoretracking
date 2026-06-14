@@ -1,26 +1,47 @@
 import os
-import sqlite3
-from flask import Flask, render_template, request, redirect, url_for, flash
-from datetime import datetime
 import uuid
+from datetime import datetime
+
+import psycopg2
+import psycopg2.extras
+from psycopg2 import sql
+from dotenv import load_dotenv
+from flask import Flask, render_template, request, redirect, url_for, flash
+
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'your_fallback_secret_key') # Use environment variable for production
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-app.config['DB_PATH'] = os.path.join(BASE_DIR, 'familygame.db')
+app.secret_key = os.environ.get('SECRET_KEY', 'your_fallback_secret_key')
+app.config['DATABASE_URL'] = os.environ.get('DATABASE_URL')
 
 # --- Database Operations ---
 def get_db_connection():
-    conn = sqlite3.connect(app.config['DB_PATH'])
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(app.config['DATABASE_URL'])
+    schema = app.config.get('DB_SCHEMA')
+    if schema:
+        cur = conn.cursor()
+        cur.execute(sql.SQL('SET search_path TO {}').format(sql.Identifier(schema)))
+        conn.commit()
+        cur.close()
     return conn
+
+def query_db(conn, query, args=(), one=False):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(query, args)
+    rv = cur.fetchall()
+    cur.close()
+    return (rv[0] if rv else None) if one else rv
+
+def execute_db(conn, query, args=()):
+    cur = conn.cursor()
+    cur.execute(query, args)
+    cur.close()
 
 def get_games():
     conn = get_db_connection()
-    games_data = conn.execute('SELECT * FROM games').fetchall()
+    games_data = query_db(conn, 'SELECT * FROM games')
     conn.close()
-    
+
     # Add logo filenames based on game name
     games_with_logos = []
     for game in games_data:
@@ -32,25 +53,26 @@ def get_games():
 
 def get_players():
     conn = get_db_connection()
-    players = conn.execute('SELECT * FROM players').fetchall()
+    players = query_db(conn, 'SELECT * FROM players')
     conn.close()
     return players
 
 def add_player(name):
     conn = get_db_connection()
     try:
-        conn.execute('INSERT INTO players (name) VALUES (?)', (name,))
+        execute_db(conn, 'INSERT INTO players (name) VALUES (%s)', (name,))
         conn.commit()
-    except sqlite3.IntegrityError:
-        pass  # Player already exists
+    except psycopg2.IntegrityError:
+        conn.rollback()  # Player already exists
     conn.close()
 
 def add_score(game_id, player_scores_map, session_id, player_total_scores_map=None):
     conn = get_db_connection()
     for player_id, score_value in player_scores_map.items():
         total_score_value = player_total_scores_map.get(player_id) if player_total_scores_map else None
-        conn.execute(
-            'INSERT INTO scores (game_id, player_id, score, total_score, session_id, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
+        execute_db(
+            conn,
+            'INSERT INTO scores (game_id, player_id, score, total_score, session_id, timestamp) VALUES (%s, %s, %s, %s, %s, %s)',
             (game_id, player_id, score_value, total_score_value, session_id, datetime.now())
         )
     conn.commit()
@@ -59,36 +81,38 @@ def add_score(game_id, player_scores_map, session_id, player_total_scores_map=No
 def ensure_games():
     # Add initial games if not present
     conn = get_db_connection()
-    
+
     # List of games that should be in the database
     required_games = ['Yahtzee', 'Uno', 'Triominos']  # Add more games here
-    
+
     for game_name in required_games:
-        existing = conn.execute('SELECT COUNT(*) FROM games WHERE name = ?', (game_name,)).fetchone()[0]
-        if existing == 0:
-            conn.execute('INSERT INTO games (name) VALUES (?)', (game_name,))
-            
+        existing = query_db(conn, 'SELECT COUNT(*) AS count FROM games WHERE name = %s', (game_name,), one=True)
+        if existing['count'] == 0:
+            execute_db(conn, 'INSERT INTO games (name) VALUES (%s)', (game_name,))
+
     conn.commit()
     conn.close()
 
 # --- Score History ---
 def get_score_history():
     conn = get_db_connection()
-    history = conn.execute('''
+    history = query_db(conn, '''
         SELECT scores.id, games.name AS game_name, players.name AS player_name, scores.score, scores.total_score, scores.timestamp
         FROM scores
         JOIN games ON scores.game_id = games.id
         JOIN players ON scores.player_id = players.id
         ORDER BY scores.timestamp DESC
-    ''').fetchall()
+    ''')
     conn.close()
     return history
 
-# --- Setup for Flask 3.x ---
+# --- Setup ---
 from db.init_db import init_db
 
 with app.app_context():
-    init_db()
+    _setup_conn = get_db_connection()
+    init_db(_setup_conn)
+    _setup_conn.close()
     ensure_games()
 
 # --- Routes ---
@@ -110,7 +134,7 @@ def select_players(game_id):
             else:
                 flash('New player name cannot be empty.')
             return redirect(url_for('select_players', game_id=game_id))
-        else: # This handles the 'Continue with Selected Players' form submission
+        else:  # This handles the 'Continue with Selected Players' form submission
             selected_player_ids_str = request.form.get('selected_player_ids')
             if selected_player_ids_str:
                 sorted_player_ids = [pid for pid in selected_player_ids_str.split(',') if pid]
@@ -121,7 +145,7 @@ def select_players(game_id):
             else:
                 flash('Please select at least one player.')
                 return redirect(url_for('select_players', game_id=game_id))
-    
+
     players = get_players()
     game = [g for g in get_games() if g['id'] == game_id][0]
     return render_template('select_players.html', players=players, game=game)
@@ -135,11 +159,12 @@ def enter_scores(game_id):
     player_ids_list = [int(pid) for pid in player_ids.split(',') if pid]
     conn = get_db_connection()
     # Fetch players and store them in a dictionary for easy lookup
-    all_players = conn.execute('SELECT * FROM players WHERE id IN (%s)' % ','.join('?'*len(player_ids_list)), player_ids_list).fetchall()
+    placeholders = ','.join(['%s'] * len(player_ids_list))
+    all_players = query_db(conn, f'SELECT * FROM players WHERE id IN ({placeholders})', player_ids_list)
     conn.close()
 
     player_dict = {player['id']: player for player in all_players}
-    
+
     # Reorder players based on the player_ids_list
     players = [player_dict[pid] for pid in player_ids_list]
     game = [g for g in get_games() if g['id'] == game_id][0]
@@ -158,7 +183,6 @@ def enter_scores(game_id):
         session_id = str(uuid.uuid4())
         if game_logic:
             success, rankings, total_scores, message = game_logic.process_scores(players, request.form)
-            print(f"Triominos process_scores returned success: {success}")
             if success:
                 add_score(game_id, rankings, session_id, total_scores)
                 return redirect(url_for('confirmation', session_id=session_id))
@@ -174,30 +198,11 @@ def enter_scores(game_id):
                 add_score(game_id, scores, session_id)
                 return redirect(url_for('confirmation', session_id=session_id))
             flash('Please enter scores for all players.')
-    
+
     if game_name == 'yahtzee':
         return render_template('yahtzee.html', players=players, game=game, player_ids=player_ids)
     elif game_name == 'triominos':
         return render_template('triominos.html', players=players, game=game, player_ids=player_ids)
-        session_id = str(uuid.uuid4())
-        if game_logic:
-            success, rankings, total_scores, message = game_logic.process_scores(players, request.form)
-            print(f"Triominos process_scores returned success: {success}")
-            if success:
-                add_score(game_id, rankings, session_id, total_scores)
-                return redirect(url_for('confirmation', session_id=session_id))
-            else:
-                flash(message)
-        else:
-            scores = {}
-            for player in players:
-                score = request.form.get(f'score_{player["id"]}')
-                if score is not None and score.isdigit():
-                    scores[player['id']] = int(score)
-            if scores:
-                add_score(game_id, scores, session_id)
-                return redirect(url_for('confirmation', session_id=session_id))
-            flash('Please enter scores for all players.')
     return render_template('enter_scores.html', players=players, game=game, is_uno=game_name == 'uno')
 
 @app.route('/calculate_yahtzee/<int:game_id>/<player_ids>', methods=['POST'])
@@ -206,7 +211,8 @@ def calculate_yahtzee(game_id, player_ids):
     yahtzee_game = YahtzeeGame()
     player_ids_list = [int(pid) for pid in player_ids.split(',') if pid]
     conn = get_db_connection()
-    players = conn.execute('SELECT * FROM players WHERE id IN (%s)' % ','.join('?'*len(player_ids_list)), player_ids_list).fetchall()
+    placeholders = ','.join(['%s'] * len(player_ids_list))
+    players = query_db(conn, f'SELECT * FROM players WHERE id IN ({placeholders})', player_ids_list)
     conn.close()
 
     player_scores = {}
@@ -227,14 +233,14 @@ def calculate_yahtzee(game_id, player_ids):
 def confirmation(session_id):
     conn = get_db_connection()
     # Get all scores for the given session_id
-    results = conn.execute('''
+    results = query_db(conn, '''
         SELECT p.name, s.score, s.total_score
         FROM scores s
         JOIN players p ON s.player_id = p.id
-        WHERE s.session_id = ?
+        WHERE s.session_id = %s
         ORDER BY s.score
-    ''', (session_id,)).fetchall()
-    
+    ''', (session_id,))
+
     conn.close()
     return render_template('confirmation.html', results=results)
 
@@ -244,10 +250,8 @@ def history():
     history_formatted = []
     for row in history_raw:
         row_dict = dict(row)
-        # The timestamp is a string from the database, e.g., '2025-07-03 12:32:15.631740'
-        # We parse it into a datetime object, then format it as a string.
-        dt_object = datetime.strptime(row_dict['timestamp'], '%Y-%m-%d %H:%M:%S.%f')
-        row_dict['timestamp'] = dt_object.strftime('%d.%m.%Y %H:%M')
+        # psycopg2 returns a real datetime object for TIMESTAMP columns
+        row_dict['timestamp'] = row_dict['timestamp'].strftime('%d.%m.%Y %H:%M')
         history_formatted.append(row_dict)
     return render_template('history.html', history=history_formatted)
 
