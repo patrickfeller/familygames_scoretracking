@@ -5,19 +5,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 - Install dependencies: `uv sync`
+- Configure environment: copy `.env.example` to `.env` and set `DATABASE_URL` (Supabase Postgres connection string) and `SECRET_KEY`
 - Run the app: `uv run python app.py` (serves at http://127.0.0.1:5000/, Flask debug mode on)
-- Run all tests: `uv run python -m unittest discover tests`
+- Run all tests: `uv run python -m unittest discover tests` (runs against the `test` schema in the same Supabase database, see Testing notes)
 - Run one test module: `uv run python -m unittest tests.test_game_logic`
 - Run a single test: `uv run python -m unittest tests.test_game_logic.TestGameLogic.test_yahtzee_game_calculate_score`
-- (Re)initialize the DB schema manually: `uv run python db/init_db.py` (also runs automatically on app startup)
+- (Re)initialize the DB schema manually: `uv run python db/init_db.py` (also runs automatically on app startup, against the `public` schema)
 
 ## Architecture
 
 ### Database
-- SQLite file `familygame.db` at repo root (gitignored — created on first run by `db/init_db.py:init_db()`).
-- Three tables: `players`, `games`, `scores`. `scores.score` is the per-round/raw value; `scores.total_score` is nullable and holds the computed game total used for ranking/display. `scores.session_id` (UUID) groups all rows from one save into a single "confirmation" view.
-- `app.config['DB_PATH']` selects which DB file `get_db_connection()` opens. Tests point this at a throwaway DB (see Testing notes below).
+- Supabase Postgres, accessed via `psycopg2` (no more SQLite/`familygame.db`).
+- `app.config['DATABASE_URL']` (from the `DATABASE_URL` env var, loaded via `python-dotenv`) is the connection string `get_db_connection()` uses. Locally and in tests this is Supabase's **direct** connection (port 5432); Vercel production uses the **pooled "Transaction" mode** connection (port 6543).
+- `query_db(conn, sql, args, one=False)` and `execute_db(conn, sql, args)` in `app.py` are thin `psycopg2` helpers replacing sqlite3's `conn.execute(...).fetchall()` convenience; rows come back as `psycopg2.extras.RealDictCursor` dicts.
+- Three tables: `players`, `games`, `scores`. `scores.score` is the per-round/raw value; `scores.total_score` is nullable and holds the computed game total used for ranking/display. `scores.session_id` (UUID, `NOT NULL`) groups all rows from one save into a single "confirmation" view.
 - `ensure_games()` in `app.py` seeds the `games` table with `Yahtzee`, `Uno`, `Triominos` on every startup — add new games to its `required_games` list.
+- `db/migrate_to_supabase.py` is a one-time script that copied the original local `familygame.db` data into Supabase (preserving IDs and fixing up sequences). Not needed for new setups.
 
 ### Request flow (all routes in `app.py`, no blueprints)
 1. `/` (`index`) — lists games via `get_games()`; each game's logo file is derived as `static/images/<name-lower>_logo.png`.
@@ -44,5 +47,7 @@ When adding a new game: add its name to `ensure_games()`'s `required_games`, add
 - `confetti.browser.min.js` is loaded from a CDN in `base.html`.
 
 ## Testing notes
-- `tests/test_game_logic.py` uses `unittest` against a throwaway SQLite DB (`tests/test_familygame.db`), set via `app.config['DB_PATH']` in `setUp`. Tables are created directly in `create_test_tables()`/cleared in `setUp` — they do **not** go through `db/init_db.py`. If you change the schema, update both `db/init_db.py` and `create_test_tables()`.
-- Importing `app` runs `init_db()`/`ensure_games()` at module load time against the real `familygame.db` (before any test overrides `DB_PATH`), so that file gets created/touched as a side effect of running the test suite.
+- `tests/test_game_logic.py` runs against a dedicated `test` schema in the same Supabase Postgres database. `setUpClass` creates the `test` schema and runs the shared `init_db(conn)` against it; `app.config['DB_SCHEMA'] = 'test'` makes `get_db_connection()` issue `SET search_path TO test` on every connection it opens.
+- `setUp` truncates `players`/`games`/`scores` (in that FK-safe order: `scores` first) in the `test` schema before each test.
+- `init_db(conn)` is shared between `db/init_db.py` and the test setup — a single source of truth for the schema, no more keeping two definitions in sync.
+- Importing `app` still runs `init_db()`/`ensure_games()` at module load time against the real `public` schema (before any test overrides `DB_SCHEMA`) — harmless and idempotent, same as before.
