@@ -9,3 +9,4 @@ familygame.db
 # Virtual environments
 .venv
 excalidraw.log
+.env
