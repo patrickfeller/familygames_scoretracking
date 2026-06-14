@@ -33,18 +33,18 @@ familygame_scoretracking/
 
 2. **Install dependencies**
    ```
-   pip install -r requirements.txt
+   uv sync
    ```
 
 3. **Initialize the database**
    - The database will be initialized automatically on first run, or you can run:
    ```
-   python db/init_db.py
+   uv run python db/init_db.py
    ```
 
 4. **Run the application**
    ```
-   python app.py
+   uv run app.py
    ```
    The app will be available at [http://127.0.0.1:5000/](http://127.0.0.1:5000/)
 
