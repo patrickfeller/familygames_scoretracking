@@ -575,3 +575,166 @@ button, .btn-touch, [onclick] {
 .hist-row__name { flex: 1; font: 700 14.5px 'Manrope',sans-serif; }
 .hist-winner-pill { font: 800 10px 'Manrope',sans-serif; letter-spacing: .06em; text-transform: uppercase; background: #fdf0d2; color: #b07d12; padding: 3px 8px; border-radius: 999px; }
 .hist-row__score { font: 800 16px 'Manrope',sans-serif; color: #232b36; min-width: 46px; text-align: right; }
+
+/* ===== RANKING PAGE ===== */
+@keyframes rank-pop {
+    0%   { transform: translateY(8px) scale(.96); opacity: 0; }
+    100% { transform: none; opacity: 1; }
+}
+@keyframes rank-rise {
+    0%   { transform: scaleY(.4); opacity: .3; }
+    100% { transform: scaleY(1); opacity: 1; }
+}
+@keyframes rank-bobble {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-4px); }
+}
+
+.rank-page { padding-bottom: 90px; }
+
+/* Header */
+.rank-header {
+    position: relative;
+    background: radial-gradient(120% 120% at 80% -10%, #2fb469 0%, #169150 55%, #0f7a42 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 22px 20px 20px;
+    margin-bottom: 4px;
+    overflow: hidden;
+}
+.rank-hd { position: absolute; }
+.rank-hd--circle1 { top: -18px; right: 38px; width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,.08); }
+.rank-hd--circle2 { top: 30px; right: -14px; width: 54px; height: 54px; border-radius: 50%; background: rgba(255,255,255,.07); }
+.rank-hd--dot1 { top: 14px; right: 120px; width: 9px; height: 9px; border-radius: 50%; background: #ffd764; opacity: .9; }
+.rank-hd--dot2 { top: 54px; right: 96px; width: 6px; height: 6px; border-radius: 50%; background: #fff; opacity: .7; }
+.rank-hd--sq { top: 40px; right: 150px; width: 7px; height: 7px; border-radius: 2px; background: #ffd764; opacity: .85; transform: rotate(20deg); }
+
+.rank-header__inner { display: flex; align-items: center; gap: 13px; position: relative; }
+.rank-header__icon {
+    width: 44px; height: 44px; border-radius: 13px;
+    background: rgba(255,255,255,.16);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.rank-header__title { font: 800 22px 'Manrope',sans-serif; line-height: 1.05; }
+.rank-header__scope { font: 600 13px 'Manrope',sans-serif; color: rgba(255,255,255,.82); margin-top: 2px; }
+
+/* Controls */
+.rank-controls {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    border-bottom: 1px solid #eef1f0;
+    padding: 13px 0 12px;
+    z-index: 10;
+}
+.rank-tabs {
+    display: flex;
+    gap: 7px;
+    margin-bottom: 11px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.rank-tab {
+    flex: 1;
+    min-width: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 4px;
+    border-radius: 13px;
+    border: 2px solid #eef1f0;
+    background: #fff;
+    color: #232b36;
+    font: 700 13px 'Manrope',sans-serif;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    white-space: nowrap;
+}
+.rank-tab--active { border-color: #1f9d57; background: #e7f5ec; }
+.rank-tab__icon {
+    width: 26px; height: 26px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font: 800 13px 'Manrope',sans-serif;
+    background: #f1f4f3; color: #8b949c;
+}
+.rank-tab__icon--on { background: #1f9d57; color: #fff; }
+
+.rank-year-row { display: flex; align-items: center; gap: 8px; }
+.rank-year-label { font: 700 11px 'Manrope',sans-serif; letter-spacing: .08em; color: #9aa3ab; text-transform: uppercase; flex-shrink: 0; }
+.rank-years { display: flex; gap: 7px; flex-wrap: wrap; }
+.rank-year-chip {
+    padding: 7px 14px;
+    border-radius: 999px;
+    font: 700 13px 'Manrope',sans-serif;
+    cursor: pointer;
+    border: 1px solid #e2e6e3;
+    background: #fff;
+    color: #56606c;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+.rank-year-chip--active { border-color: #232b36; background: #232b36; color: #fff; }
+
+/* Podium */
+.rank-podium-wrap {
+    padding: 22px 0 18px;
+    background: linear-gradient(180deg, #eef6f1 0%, #fff 100%);
+    border-radius: 16px;
+    margin: 14px 0 0;
+}
+.rank-podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 10px;
+}
+.rank-ped-col { display: flex; flex-direction: column; align-items: center; }
+.rank-crown { display: block; margin: 0 auto 4px; animation: rank-bobble 2.4s ease-in-out infinite; }
+.rank-ped-name { font: 800 14.5px 'Manrope',sans-serif; text-align: center; margin-top: 7px; }
+.rank-ped-value { font: 800 19px 'Manrope',sans-serif; text-align: center; color: #232b36; line-height: 1.1; margin-top: 1px; }
+.rank-ped-sublabel { font: 700 11px 'Manrope',sans-serif; color: #9aa3ab; }
+.rank-ped-bar {
+    width: 100%;
+    border-radius: 16px 16px 8px 8px;
+    margin-top: 10px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12px;
+    transform-origin: bottom;
+}
+.rank-ped-rank { font: 800 30px 'Manrope',sans-serif; color: rgba(255,255,255,.92); line-height: 1; }
+
+/* List (rank 4+) */
+.rank-list-wrap { margin-top: 10px; }
+.rank-list { display: flex; flex-direction: column; gap: 9px; padding: 6px 0 10px; }
+.rank-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #eef1f0;
+    border-radius: 16px;
+    padding: 11px 13px;
+}
+.rank-item__rank { width: 24px; font: 800 16px 'Manrope',sans-serif; color: #b4bcc2; text-align: center; flex-shrink: 0; }
+.rank-item__info { flex: 1; min-width: 0; }
+.rank-item__name { font: 700 15.5px 'Manrope',sans-serif; }
+.rank-item__sub  { font: 600 12px 'Manrope',sans-serif; color: #9aa3ab; margin-top: 1px; }
+.rank-item__score { text-align: right; flex-shrink: 0; min-width: 54px; }
+.rank-item__value { font: 800 18px 'Manrope',sans-serif; line-height: 1; }
+.rank-item__label { font: 700 10px 'Manrope',sans-serif; color: #9aa3ab; letter-spacing: .04em; text-transform: uppercase; }
+.rank-trend { font: 800 11px 'Manrope',sans-serif; padding: 4px 8px; border-radius: 999px; flex-shrink: 0; }
+.rank-trend--up   { background: #e7f5ec; color: #1f9d57; }
+.rank-trend--down { background: #fcebe9; color: #d6685e; }
+
+/* Footer */
+.rank-footer { display: flex; gap: 10px; }
+.rank-footer .btn-primary-green { flex: 1; height: 50px; font: 800 15px 'Manrope',sans-serif; }
+
+/* Empty state */
+.rank-empty { color: #9aa3ab; padding: 24px 2px; font: 600 14px 'Manrope',sans-serif; }

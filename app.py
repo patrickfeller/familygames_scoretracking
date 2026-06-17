@@ -250,6 +250,40 @@ def confirmation(session_id):
     conn.close()
     return render_template('confirmation.html', results=results)
 
+@app.route('/ranking')
+def ranking():
+    conn = get_db_connection()
+    rows = query_db(conn, '''
+        SELECT
+            p.name            AS player_name,
+            g.name            AS game_name,
+            EXTRACT(YEAR FROM s.timestamp)::int AS year,
+            COALESCE(SUM(s.total_score), 0)::bigint AS total_points,
+            COUNT(DISTINCT CASE WHEN s.score = 1 THEN s.session_id END) AS wins,
+            COUNT(DISTINCT s.session_id) AS games_played
+        FROM scores s
+        JOIN players p ON s.player_id = p.id
+        JOIN games  g ON s.game_id  = g.id
+        GROUP BY p.name, g.name, EXTRACT(YEAR FROM s.timestamp)::int
+        ORDER BY g.name, year DESC, total_points DESC
+    ''')
+    conn.close()
+
+    stats = {}      # stats[game][year][player] = [pts, wins, games]
+    years_set = set()
+    for row in rows:
+        g = row['game_name']
+        y = str(int(row['year']))
+        n = row['player_name']
+        years_set.add(y)
+        stats.setdefault(g, {}).setdefault(y, {})[n] = [
+            int(row['total_points']), int(row['wins']), int(row['games_played'])
+        ]
+
+    years = sorted(years_set, reverse=True)
+    games = sorted(stats.keys())
+    return render_template('ranking.html', stats=stats, years=years, games=games)
+
 @app.route('/history')
 def history():
     rows = get_score_history()

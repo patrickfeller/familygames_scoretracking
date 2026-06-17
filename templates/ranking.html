@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="rank-page">
+
+  <!-- GREEN HEADER -->
+  <div class="rank-header">
+    <div class="rank-hd rank-hd--circle1"></div>
+    <div class="rank-hd rank-hd--circle2"></div>
+    <div class="rank-hd rank-hd--dot1"></div>
+    <div class="rank-hd rank-hd--dot2"></div>
+    <div class="rank-hd rank-hd--sq"></div>
+    <div class="rank-header__inner">
+      <div class="rank-header__icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 4h12v2.2a4.8 4.8 0 0 1-3.2 4.53V13h2.2v2H7v-2h2.2v-2.27A4.8 4.8 0 0 1 6 6.2V4Z" fill="#ffd764"/>
+          <path d="M6 5.4H4.2a.8.8 0 0 0-.8.8c0 1.7 1 3.1 2.6 3.5M18 5.4h1.8a.8.8 0 0 1 .8.8c0 1.7-1 3.1-2.6 3.5" stroke="#ffd764" stroke-width="1.4" stroke-linecap="round"/>
+          <path d="M8 18.5h8l.8 2.2H7.2L8 18.5Z" fill="#ffd764"/>
+        </svg>
+      </div>
+      <div>
+        <div class="rank-header__title">Leaderboard</div>
+        <div class="rank-header__scope" id="rankScopeLabel">Overall standings · All-time</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STICKY CONTROLS -->
+  <div class="rank-controls">
+    <div class="rank-tabs" id="rankTabs"></div>
+    <div class="rank-year-row">
+      <span class="rank-year-label">Year</span>
+      <div class="rank-years" id="rankYears"></div>
+    </div>
+  </div>
+
+  <!-- PODIUM -->
+  <div id="rankPodiumWrap" class="rank-podium-wrap"></div>
+
+  <!-- RANKED LIST (4+) -->
+  <div id="rankListWrap" class="rank-list-wrap"></div>
+
+  <!-- FOOTER -->
+  <div class="sticky-bottom rank-footer">
+    <a href="{{ url_for('index') }}" class="btn-primary-green btn-secondary">Home</a>
+    <a href="{{ url_for('index') }}" class="btn-primary-green">New game</a>
+  </div>
+
+</div>
+
+<script>
+const STATS = {{ stats | tojson }};
+const YEARS = {{ years | tojson }};
+const GAMES = {{ games | tojson }};
+
+let state = { game: 'Overall', year: 'All' };
+
+function nameColor(name) {
+    const hues = [28, 150, 250, 305, 85, 200, 340, 60, 190, 270];
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h += name.charCodeAt(i);
+    return `oklch(0.62 0.12 ${hues[h % hues.length]})`;
+}
+
+function ini(name) { return name.charAt(0).toUpperCase(); }
+
+function avStyle(name, size) {
+    const fs = Math.round(size * 0.42);
+    return `width:${size}px;height:${size}px;border-radius:50%;background:${nameColor(name)};color:#fff;` +
+           `display:inline-flex;align-items:center;justify-content:center;` +
+           `font:700 ${fs}px 'Manrope',sans-serif;flex-shrink:0`;
+}
+
+function statsFor(game, year) {
+    const games = game === 'Overall' ? GAMES : [game];
+    const years = year === 'All' ? YEARS : [year];
+    const acc = {};
+    games.forEach(g => years.forEach(y => {
+        if (!STATS[g] || !STATS[g][y]) return;
+        Object.keys(STATS[g][y]).forEach(n => {
+            const [p, w, gp] = STATS[g][y][n];
+            if (!acc[n]) acc[n] = { pts: 0, wins: 0, games: 0 };
+            acc[n].pts  += p;
+            acc[n].wins += w;
+            acc[n].games += gp;
+        });
+    }));
+    const overall = game === 'Overall';
+    const arr = Object.keys(acc).map(n => ({ name: n, ...acc[n] })).filter(x => x.games > 0);
+    arr.sort((a, b) => overall
+        ? (b.wins - a.wins) || (b.pts - a.pts)
+        : (b.pts - a.pts)  || (b.wins - a.wins));
+    return arr;
+}
+
+function rankIndex(game, year, name) {
+    const arr = statsFor(game, year);
+    const i = arr.findIndex(x => x.name === name);
+    return i < 0 ? null : i;
+}
+
+function render() {
+    const { game, year } = state;
+    const overall = game === 'Overall';
+    const arr = statsFor(game, year);
+
+    // Scope label
+    document.getElementById('rankScopeLabel').textContent =
+        `${overall ? 'Overall standings' : game} · ${year === 'All' ? 'All-time' : year}`;
+
+    // Game tabs
+    const allTabs = ['Overall', ...GAMES];
+    document.getElementById('rankTabs').innerHTML = allTabs.map(g => {
+        const on = g === game;
+        return `<button class="rank-tab${on ? ' rank-tab--active' : ''}" onclick="setGame('${g}')">
+            <span class="rank-tab__icon${on ? ' rank-tab__icon--on' : ''}">${g === 'Overall' ? '★' : g[0]}</span>
+            <span>${g}</span>
+        </button>`;
+    }).join('');
+
+    // Year chips
+    const allYears = ['All', ...YEARS];
+    document.getElementById('rankYears').innerHTML = allYears.map(y => {
+        const on = y === year;
+        return `<button class="rank-year-chip${on ? ' rank-year-chip--active' : ''}" onclick="setYear('${y}')">
+            ${y === 'All' ? 'All-time' : y}
+        </button>`;
+    }).join('');
+
+    // Prev year for trend arrows
+    const prevYearIdx = YEARS.indexOf(year);
+    const prevYear = year !== 'All' && prevYearIdx + 1 < YEARS.length ? YEARS[prevYearIdx + 1] : null;
+
+    const headlineVal   = x => overall ? x.wins : x.pts;
+    const headlineLabel = overall ? 'wins' : 'pts';
+
+    // Empty state
+    if (arr.length === 0) {
+        document.getElementById('rankPodiumWrap').innerHTML = '';
+        document.getElementById('rankListWrap').innerHTML =
+            '<p class="rank-empty">No scores recorded yet for this filter.</p>';
+        return;
+    }
+
+    // ---- PODIUM (top 3) ----
+    const medals    = ['#e9b021', '#9aa6ad', '#c08552'];
+    const pedColors = [
+        'linear-gradient(180deg,#f2c233,#e0a513)',
+        'linear-gradient(180deg,#aeb7bd,#8c969d)',
+        'linear-gradient(180deg,#cf9a6a,#b07847)',
+    ];
+    const pedHeights = [150, 110, 80];
+    const top3 = arr.slice(0, 3);
+    // display order: 2nd-place | 1st-place | 3rd-place
+    const orderMap = [1, 0, 2].filter(i => top3[i]);
+    const cols = orderMap.map(i => {
+        const x = top3[i];
+        const animDelay = (0.05 + i * 0.07).toFixed(2);
+        const riseDelay = (0.10 + i * 0.07).toFixed(2);
+        const crown = i === 0
+            ? `<svg width="30" height="22" viewBox="0 0 30 22" class="rank-crown" aria-hidden="true">
+                 <path d="M3 6l5 5 7-9 7 9 5-5-2.4 13H5.4L3 6Z" fill="#e9b021" stroke="#c8941a" stroke-width="1"/>
+                 <circle cx="3" cy="5" r="2.2" fill="#e9b021"/>
+                 <circle cx="27" cy="5" r="2.2" fill="#e9b021"/>
+                 <circle cx="15" cy="2" r="2.2" fill="#e9b021"/>
+               </svg>` : '';
+        return `
+<div class="rank-ped-col" style="flex:0 0 ${i===0?118:106}px;animation:rank-pop .4s ease ${animDelay}s both">
+  ${crown}
+  <div style="${avStyle(x.name,52)};margin:0 auto;box-shadow:0 0 0 3px #fff,0 0 0 6px ${medals[i]}">${ini(x.name)}</div>
+  <div class="rank-ped-name">${x.name}</div>
+  <div class="rank-ped-value">${headlineVal(x)}<span class="rank-ped-sublabel"> ${headlineLabel}</span></div>
+  <div class="rank-ped-bar" style="height:${pedHeights[i]}px;background:${pedColors[i]};animation:rank-rise .5s cubic-bezier(.2,.8,.3,1) ${riseDelay}s both">
+    <span class="rank-ped-rank">${i + 1}</span>
+  </div>
+</div>`;
+    }).join('');
+
+    document.getElementById('rankPodiumWrap').innerHTML = `<div class="rank-podium">${cols}</div>`;
+
+    // ---- LIST (rank 4+) ----
+    const rest = arr.slice(3).map((x, k) => {
+        const rank = k + 4;
+        let trend = null;
+        if (prevYear !== null) {
+            const prev = rankIndex(game, prevYear, x.name);
+            if (prev !== null) trend = prev - (rank - 1);
+        }
+        const dir = trend === null ? 0 : Math.sign(trend);
+        const winRate = Math.round(x.wins / x.games * 100);
+        const sub = overall
+            ? `${x.games} games · ${winRate}% win rate`
+            : `${x.wins} ${x.wins === 1 ? 'win' : 'wins'} · ${x.games} games`;
+        const trendHtml = (dir !== 0)
+            ? `<span class="rank-trend rank-trend--${dir > 0 ? 'up' : 'down'}">${dir > 0 ? '▲' : '▼'} ${Math.abs(trend)}</span>`
+            : '';
+        return `
+<div class="rank-item">
+  <span class="rank-item__rank">${rank}</span>
+  <span style="${avStyle(x.name,40)}">${ini(x.name)}</span>
+  <div class="rank-item__info">
+    <div class="rank-item__name">${x.name}</div>
+    <div class="rank-item__sub">${sub}</div>
+  </div>
+  ${trendHtml}
+  <div class="rank-item__score">
+    <div class="rank-item__value">${headlineVal(x)}</div>
+    <div class="rank-item__label">${headlineLabel}</div>
+  </div>
+</div>`;
+    }).join('');
+
+    document.getElementById('rankListWrap').innerHTML = rest
+        ? `<div class="rank-list">${rest}</div>`
+        : '';
+}
+
+function setGame(g) { state = { ...state, game: g }; render(); }
+function setYear(y) { state = { ...state, year: y }; render(); }
+
+render();
+</script>
+
+{% endblock %}
