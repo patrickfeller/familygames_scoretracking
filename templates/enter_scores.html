@@ -1,36 +1,162 @@
 {% extends 'base.html' %}
 {% block content %}
-<section class="score-entry">
-    <h2>Enter Scores for {{ game['name'] }}</h2>
-    <form method="post">
-        <table class="score-table">
-            <thead>
-                <tr>
-                    <th>Player</th>
-                    {% if is_uno %}
-                    <th>Ranking</th>
-                    {% else %}
-                    <th>Score</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for player in players %}
-                <tr>
-                    <td>{{ player['name'] }}</td>
-                    {% if is_uno %}
-                    <td><input type="number" name="rank_{{ player['id'] }}" min="1" max="{{ players|length }}" required></td>
-                    {% else %}
-                    <td><input type="number" name="score_{{ player['id'] }}" min="0" required></td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% if is_uno %}
-        <p class="info">Enter a unique ranking for each player (1 = 1st place, 2 = 2nd, etc.). Each player must have a different rank.</p>
-        {% endif %}
-        <button type="submit" class="button">Finalize & Save</button>
+
+{% if is_uno %}
+<!-- ===== UNO TAP-ORDER UI ===== -->
+<div class="uno-page">
+  <h2 style="margin:0 0 12px">{{ game['name'] }} · Result</h2>
+
+  <div class="uno-hint">Tap each player in the order they went out. Tap again to clear that spot.</div>
+
+  <div class="uno-section-label">Finishing order</div>
+
+  <div id="unoList" class="uno-list">
+    {% for player in players %}
+    <div class="uno-item" id="uno-item-{{ player['id'] }}" data-player-id="{{ player['id'] }}">
+      <div class="uno-place" id="uno-place-{{ player['id'] }}">·</div>
+      <span class="avatar uno-avatar" style="background:#1f9d57">{{ player['name'][0].upper() }}</span>
+      <span class="uno-name">{{ player['name'] }}</span>
+      <span class="uno-medal" id="uno-medal-{{ player['id'] }}">tap</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Hidden inputs for form POST -->
+  {% for player in players %}
+  <input type="hidden" name="rank_{{ player['id'] }}" id="rank-input-{{ player['id'] }}" form="unoForm">
+  {% endfor %}
+
+  <div class="sticky-bottom">
+    <form id="unoForm" method="post">
+      <button type="submit" id="unoSubmitBtn" class="btn-primary-green disabled" disabled>
+        Rank all {{ players|length }} players (<span id="unoRanked">0</span>/{{ players|length }})
+      </button>
     </form>
+  </div>
+</div>
+
+<style>
+.uno-page { padding-bottom: 80px; }
+.uno-hint {
+  background: #eef6f1; border-radius: 14px; padding: 12px 14px;
+  margin-bottom: 16px; font: 600 13.5px/1.45 'Manrope',sans-serif; color: #3f6b53;
+}
+.uno-section-label { font: 800 11.5px 'Manrope',sans-serif; letter-spacing:.1em; color:#9aa3ab; text-transform:uppercase; margin: 0 2px 9px; }
+.uno-list { display: flex; flex-direction: column; gap: 9px; }
+.uno-item {
+  display: flex; align-items: center; gap: 13px;
+  padding: 11px 13px; border-radius: 16px;
+  border: 2px solid #e6e9e8; background: #fff;
+  cursor: pointer; user-select: none;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  min-height: 66px;
+}
+.uno-item--ranked { border-color: #1f9d57; background: #e7f5ec; }
+.uno-place {
+  width: 36px; height: 36px; border-radius: 10px;
+  border: 2px dashed #cfd6d3; color: #cfd6d3;
+  display: flex; align-items: center; justify-content: center;
+  font: 800 18px 'Manrope',sans-serif; flex-shrink: 0;
+}
+.uno-place--ranked { border: none; color: #fff; }
+.uno-avatar { width: 42px; height: 42px; font-size: 17px; }
+.uno-name { flex: 1; font: 700 16px 'Manrope',sans-serif; }
+.uno-medal { font: 600 12px 'Manrope',sans-serif; color: #b6bdc2; }
+</style>
+
+<script>
+(function () {
+  const MEDALS = ['#d9a420', '#9aa6ad', '#bd8a5e'];
+  const LABELS = ['1st', '2nd', '3rd'];
+  const totalPlayers = {{ players|length }};
+  let order = []; // array of player id strings in finishing order
+
+  function render() {
+    order.forEach((pid, i) => {
+      const item = document.getElementById(`uno-item-${pid}`);
+      const place = document.getElementById(`uno-place-${pid}`);
+      const medal = document.getElementById(`uno-medal-${pid}`);
+      const color = i < 3 ? MEDALS[i] : '#1f9d57';
+      item.classList.add('uno-item--ranked');
+      place.classList.add('uno-place--ranked');
+      place.style.background = color;
+      place.textContent = i + 1;
+      medal.textContent = i < 3 ? LABELS[i] : '';
+      medal.style.color = i < 3 ? MEDALS[i] : '#1f9d57';
+      // populate hidden input
+      document.getElementById(`rank-input-${pid}`).value = i + 1;
+    });
+
+    // Reset unranked items
+    document.querySelectorAll('.uno-item').forEach(item => {
+      const pid = item.dataset.playerId;
+      if (!order.includes(pid)) {
+        item.classList.remove('uno-item--ranked');
+        const place = document.getElementById(`uno-place-${pid}`);
+        place.classList.remove('uno-place--ranked');
+        place.style.background = '';
+        place.textContent = '·';
+        document.getElementById(`uno-medal-${pid}`).textContent = 'tap';
+        document.getElementById(`uno-medal-${pid}`).style.color = '#b6bdc2';
+        document.getElementById(`rank-input-${pid}`).value = '';
+      }
+    });
+
+    const n = order.length;
+    document.getElementById('unoRanked').textContent = n;
+    const btn = document.getElementById('unoSubmitBtn');
+    if (n === totalPlayers) {
+      btn.disabled = false;
+      btn.classList.remove('disabled');
+      btn.textContent = 'Save result';
+    } else {
+      btn.disabled = true;
+      btn.classList.add('disabled');
+      btn.innerHTML = `Rank all ${totalPlayers} players (<span id="unoRanked">${n}</span>/${totalPlayers})`;
+    }
+  }
+
+  document.getElementById('unoList').addEventListener('click', e => {
+    const item = e.target.closest('.uno-item');
+    if (!item) return;
+    const pid = item.dataset.playerId;
+    const idx = order.indexOf(pid);
+    if (idx >= 0) {
+      order.splice(idx, 1);
+    } else {
+      order.push(pid);
+    }
+    render();
+  });
+
+  render();
+})();
+</script>
+
+{% else %}
+<!-- ===== GENERIC SCORE ENTRY (non-Uno) ===== -->
+<section class="score-entry">
+  <h2>Enter Scores for {{ game['name'] }}</h2>
+  <form method="post">
+    <table class="score-table">
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for player in players %}
+        <tr>
+          <td>{{ player['name'] }}</td>
+          <td><input type="number" name="score_{{ player['id'] }}" min="0" required inputmode="numeric"></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="submit" class="button">Finalize & Save</button>
+  </form>
 </section>
-{% endblock %} 
+{% endif %}
+
+{% endblock %}
