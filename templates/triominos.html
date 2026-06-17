@@ -1,138 +1,180 @@
 {% extends 'base.html' %}
 {% block content %}
-<section class="enter-scores">
-    <h2>Enter Scores for {{ game.name }}</h2>
-    <form id="triominos-form" action="{{ url_for('enter_scores', game_id=game.id, player_ids=player_ids) }}" method="POST">
-        <div class="score-table-container">
-            <table id="triominos-score-table">
-                <thead>
-                    <tr>
-                        <th>Round</th>
-                        {% for player in players %}
-                        <th>{{ player.name }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr data-round="1">
-                        <td>1</td>
-                        {% for player in players %}
-                        <td><input type="number" name="score_{{ player.id }}_1" value="0" required></td>
-                        {% endfor %}
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td><strong>Total</strong></td>
-                        {% for player in players %}
-                        <td id="total_score_{{ player.id }}">0</td>
-                        {% endfor %}
-                    </tr>
-                </tfoot>
-            </table>
+
+<div class="tri-page">
+  <h2 style="margin:0 0 0">{{ game.name }}</h2>
+
+  <form id="triominos-form"
+        action="{{ url_for('enter_scores', game_id=game.id, player_ids=player_ids) }}"
+        method="POST">
+
+    <!-- Sticky leaderboard -->
+    <div class="tri-lead" id="triLead">
+      {% for player in players %}
+      <div class="tri-lead__card">
+        <span class="avatar tri-lead__avatar" style="background:#1f9d57">{{ player.name[0].upper() }}</span>
+        <div class="tri-lead__name">{{ player.name }}</div>
+        <div class="tri-lead__total" id="total_score_{{ player.id }}">0</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Round cards -->
+    <div id="triRounds" style="display:flex;flex-direction:column;gap:12px;padding:14px 0 18px">
+
+      <!-- Round 1 (initial) -->
+      <div class="tri-round" data-round="1">
+        <div class="tri-round__label">Round 1</div>
+        {% for player in players %}
+        <div class="tri-stepper-row">
+          <span class="avatar tri-stepper-avatar" style="background:#1f9d57">{{ player.name[0].upper() }}</span>
+          <span class="tri-stepper-name">{{ player.name }}</span>
+          <button type="button" class="touch-btn tri-btn-dec"
+                  data-player="{{ player.id }}" data-round="1"
+                  aria-label="Decrease">−</button>
+          <input type="number"
+                 name="score_{{ player.id }}_1"
+                 id="score_{{ player.id }}_1"
+                 class="tri-input"
+                 value="0"
+                 inputmode="numeric"
+                 min="0"
+                 data-player="{{ player.id }}">
+          <button type="button" class="touch-btn tri-btn-inc"
+                  data-player="{{ player.id }}" data-round="1"
+                  aria-label="Increase">＋</button>
         </div>
-        <button type="button" id="add-round-button">Add Round</button>
-        <button type="submit">Save Scores</button>
-    </form>
-</section>
+        {% endfor %}
+      </div>
+
+    </div>
+
+    <!-- Add round button -->
+    <button type="button" id="addRoundBtn" class="tri-add-round">＋ Add round</button>
+
+    <!-- Sticky submit -->
+    <div class="sticky-bottom">
+      <button type="submit" class="btn-primary-green">Save Scores</button>
+    </div>
+
+  </form>
+</div>
+
+<style>
+.tri-page { padding-bottom: 80px; }
+.tri-lead {
+  display: flex; gap: 9px; padding: 14px 0;
+  position: sticky; top: 0; background: #fff; border-bottom: 1px solid #eef1f0; z-index: 5;
+}
+.tri-lead__card {
+  flex: 1; background: #f6f8f7; border: 1px solid #eef1f0;
+  border-radius: 13px; padding: 9px 8px; text-align: center;
+}
+.tri-lead__avatar { width: 32px; height: 32px; font-size: 14px; margin: 0 auto 6px; }
+.tri-lead__name { font: 700 12px 'Manrope',sans-serif; color: #56606c; }
+.tri-lead__total { font: 800 21px 'Manrope',sans-serif; margin-top: 1px; }
+.tri-round {
+  background: #fff; border: 1px solid #eef1f0;
+  border-radius: 16px; padding: 13px 13px 14px;
+}
+.tri-round__label { font: 800 12.5px 'Manrope',sans-serif; letter-spacing:.06em; color:#9aa3ab; text-transform:uppercase; margin-bottom:11px; }
+.tri-stepper-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.tri-stepper-row:last-child { margin-bottom: 0; }
+.tri-stepper-avatar { width: 34px; height: 34px; font-size: 14px; }
+.tri-stepper-name { flex: 1; font: 700 14.5px 'Manrope',sans-serif; min-width: 0; }
+.tri-btn-dec {
+  width: 44px; height: 44px; border-radius: 12px;
+  border: 1px solid #e0e5e1; background: #fff; color: #56606c;
+  font: 700 22px 'Manrope',sans-serif;
+}
+.tri-btn-inc {
+  width: 44px; height: 44px; border-radius: 12px;
+  border: 1px solid #cfe7d9; background: #eef7f1; color: #1f9d57;
+  font: 700 22px 'Manrope',sans-serif;
+}
+.tri-input {
+  width: 60px; height: 44px; border: 1px solid #e0e5e1;
+  border-radius: 11px; text-align: center;
+  font: 800 18px 'Manrope',sans-serif; background: #f7faf8; outline: none;
+}
+.tri-add-round {
+  width: 100%; height: 50px; border-radius: 14px;
+  border: 1.5px dashed #c7d0ca; background: #fff; color: #46707d;
+  font: 700 15px 'Manrope',sans-serif; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin-bottom: 12px; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+</style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM Content Loaded.');
-        let roundCount = 1;
-        const scoreTableBody = document.querySelector('#triominos-score-table tbody');
-        const addRoundButton = document.getElementById('add-round-button');
-        const scoreTable = document.getElementById('triominos-score-table');
-        const triominosForm = document.getElementById('triominos-form');
+(function () {
+  const playerIds = {{ players | map(attribute='id') | list | tojson }};
+  const playerNames = {{ players | map(attribute='name') | list | tojson }};
+  let roundCount = 1;
 
-        // Get player IDs from the template context
-        let playerIds = [];
-        try {
-            const playerIdsString = "{{ player_ids }}";
-            if (playerIdsString) {
-                playerIds = playerIdsString.split(',').map(id => parseInt(id)).filter(id => !isNaN(id));
-            }
-            console.log('Parsed playerIds:', playerIds);
-            if (playerIds.length === 0) {
-                console.warn('playerIds array is empty. Check player_ids passed to template.');
-            }
-        } catch (error) {
-            console.error('Error parsing player_ids:', error);
-        }
+  function getVal(playerId, round) {
+    const el = document.getElementById(`score_${playerId}_${round}`);
+    return el ? (parseInt(el.value) || 0) : 0;
+  }
 
-        function updateTotals() {
-            try {
-                console.log('Updating totals...');
-                playerIds.forEach(playerId => {
-                    let playerTotal = 0;
-                    scoreTable.querySelectorAll(`input[name^="score_${playerId}_"`).forEach(input => {
-                        playerTotal += parseInt(input.value) || 0;
-                    });
-                    const totalElement = document.getElementById(`total_score_${playerId}`);
-                    if (totalElement) {
-                        totalElement.textContent = playerTotal;
-                    } else {
-                        console.warn(`Total element for player ${playerId} not found.`);
-                    }
-                });
-                console.log('Totals updated.');
-            } catch (error) {
-                console.error('Error in updateTotals:', error);
-            }
-        }
-
-        // Initial total calculation
-        updateTotals();
-
-        if (addRoundButton) {
-            addRoundButton.addEventListener('click', function() {
-                try {
-                    console.log('Add Round button clicked!');
-                    roundCount++;
-                    const newRow = document.createElement('tr');
-                    newRow.dataset.round = roundCount;
-
-                    const roundCell = document.createElement('td');
-                    roundCell.textContent = roundCount;
-                    newRow.appendChild(roundCell);
-
-                    playerIds.forEach(playerId => {
-                        const playerCell = document.createElement('td');
-                        const input = document.createElement('input');
-                        input.type = 'number';
-                        input.name = `score_${playerId}_${roundCount}`;
-                        input.value = '0';
-                        input.required = true;
-                        input.addEventListener('input', updateTotals); // Add event listener immediately
-                        playerCell.appendChild(input);
-                        newRow.appendChild(playerCell);
-                    });
-
-                    scoreTableBody.appendChild(newRow);
-                    updateTotals(); // Update totals after adding a new row
-                    console.log(`Added round ${roundCount}`);
-                } catch (error) {
-                    console.error('Error in Add Round button click handler:', error);
-                }
-            });
-        } else {
-            console.error('Add Round button not found!');
-        }
-
-        // Add event listeners to initial inputs
-        scoreTable.querySelectorAll('input[type="number"]').forEach(input => {
-            input.addEventListener('input', updateTotals);
-        });
-
-        // Add submit event listener to the form
-        if (triominosForm) {
-            triominosForm.addEventListener('submit', function(event) {
-                console.log('Form submitted!');
-                // You can add more debugging here if needed
-            });
-        } else {
-            console.error('Triominos form not found!');
-        }
+  function updateTotals() {
+    playerIds.forEach(pid => {
+      let total = 0;
+      for (let r = 1; r <= roundCount; r++) total += getVal(pid, r);
+      const el = document.getElementById(`total_score_${pid}`);
+      if (el) el.textContent = total;
     });
+  }
+
+  function attachInputListeners(round) {
+    playerIds.forEach(pid => {
+      const inp = document.getElementById(`score_${pid}_${round}`);
+      if (inp) inp.addEventListener('input', updateTotals);
+    });
+  }
+
+  function attachStepperListeners(round) {
+    document.querySelectorAll(`.tri-btn-dec[data-round="${round}"], .tri-btn-inc[data-round="${round}"]`).forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pid = btn.dataset.player;
+        const inp = document.getElementById(`score_${pid}_${round}`);
+        if (!inp) return;
+        const dir = btn.classList.contains('tri-btn-inc') ? 1 : -1;
+        inp.value = Math.max(0, (parseInt(inp.value) || 0) + dir);
+        updateTotals();
+      });
+    });
+  }
+
+  document.getElementById('addRoundBtn').addEventListener('click', () => {
+    roundCount++;
+    const r = roundCount;
+    const div = document.createElement('div');
+    div.className = 'tri-round';
+    div.dataset.round = r;
+    let html = `<div class="tri-round__label">Round ${r}</div>`;
+    playerIds.forEach((pid, i) => {
+      html += `
+        <div class="tri-stepper-row">
+          <span class="avatar tri-stepper-avatar" style="background:#1f9d57">${playerNames[i][0].toUpperCase()}</span>
+          <span class="tri-stepper-name">${playerNames[i]}</span>
+          <button type="button" class="touch-btn tri-btn-dec" data-player="${pid}" data-round="${r}" aria-label="Decrease">−</button>
+          <input type="number" name="score_${pid}_${r}" id="score_${pid}_${r}" class="tri-input" value="0" inputmode="numeric" min="0" data-player="${pid}">
+          <button type="button" class="touch-btn tri-btn-inc" data-player="${pid}" data-round="${r}" aria-label="Increase">＋</button>
+        </div>`;
+    });
+    div.innerHTML = html;
+    // Insert before the add-round button
+    document.getElementById('addRoundBtn').insertAdjacentElement('beforebegin', div);
+    attachInputListeners(r);
+    attachStepperListeners(r);
+  });
+
+  // Wire up initial round
+  attachInputListeners(1);
+  attachStepperListeners(1);
+  updateTotals();
+})();
 </script>
+
 {% endblock %}
