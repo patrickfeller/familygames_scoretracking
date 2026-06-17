@@ -103,7 +103,8 @@
     });
 
     const n = order.length;
-    document.getElementById('unoRanked').textContent = n;
+    const rankedSpan = document.getElementById('unoRanked');
+    if (rankedSpan) rankedSpan.textContent = n;
     const btn = document.getElementById('unoSubmitBtn');
     if (n === totalPlayers) {
       btn.disabled = false;
