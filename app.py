@@ -96,15 +96,21 @@ def ensure_games():
 # --- Score History ---
 def get_score_history():
     conn = get_db_connection()
-    history = query_db(conn, '''
-        SELECT scores.id, games.name AS game_name, players.name AS player_name, scores.score, scores.total_score, scores.timestamp
+    rows = query_db(conn, '''
+        SELECT
+            scores.session_id,
+            games.name AS game_name,
+            players.name AS player_name,
+            scores.score,
+            scores.total_score,
+            scores.timestamp
         FROM scores
         JOIN games ON scores.game_id = games.id
         JOIN players ON scores.player_id = players.id
-        ORDER BY scores.timestamp DESC
+        ORDER BY scores.timestamp DESC, scores.total_score DESC NULLS LAST
     ''')
     conn.close()
-    return history
+    return rows
 
 # --- Setup ---
 from db.init_db import init_db
@@ -246,14 +252,38 @@ def confirmation(session_id):
 
 @app.route('/history')
 def history():
-    history_raw = get_score_history()
-    history_formatted = []
-    for row in history_raw:
+    rows = get_score_history()
+    # Group flat rows into session objects
+    sessions = []
+    seen = {}  # session_id -> index in sessions list
+    for row in rows:
         row_dict = dict(row)
-        # psycopg2 returns a real datetime object for TIMESTAMP columns
-        row_dict['timestamp'] = row_dict['timestamp'].strftime('%d.%m.%Y %H:%M')
-        history_formatted.append(row_dict)
-    return render_template('history.html', history=history_formatted)
+        sid = str(row_dict['session_id'])
+        ts = row_dict['timestamp'].strftime('%d %b · %H:%M')
+        if sid not in seen:
+            seen[sid] = len(sessions)
+            sessions.append({
+                'session_id': sid,
+                'game': row_dict['game_name'],
+                'when': ts,
+                'rows': [],
+            })
+        sessions[seen[sid]]['rows'].append({
+            'name': row_dict['player_name'],
+            'score': row_dict['score'],
+            'total': row_dict['total_score'],
+        })
+    # Mark winner per session (highest total_score; skip None)
+    for s in sessions:
+        valid = [r for r in s['rows'] if r['total'] is not None]
+        if valid:
+            best = max(valid, key=lambda r: r['total'])
+            for r in s['rows']:
+                r['win'] = (r is best)
+        else:
+            for r in s['rows']:
+                r['win'] = False
+    return render_template('history.html', sessions=sessions)
 
 if __name__ == '__main__':
     app.run(debug=True)
