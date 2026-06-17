@@ -2,7 +2,7 @@
 {% block content %}
 
 <div class="tri-page">
-  <h2 style="margin:0 0 0">{{ game.name }}</h2>
+  <h2>{{ game.name }}</h2>
 
   <form id="triominos-form"
         action="{{ url_for('enter_scores', game_id=game.id, player_ids=player_ids) }}"
@@ -12,7 +12,7 @@
     <div class="tri-lead" id="triLead">
       {% for player in players %}
       <div class="tri-lead__card">
-        <span class="avatar tri-lead__avatar" style="background:#1f9d57">{{ player.name[0].upper() }}</span>
+        <span class="avatar tri-lead__avatar">{{ player.name[0].upper() }}</span>
         <div class="tri-lead__name">{{ player.name }}</div>
         <div class="tri-lead__total" id="total_score_{{ player.id }}">0</div>
       </div>
@@ -20,14 +20,14 @@
     </div>
 
     <!-- Round cards -->
-    <div id="triRounds" style="display:flex;flex-direction:column;gap:12px;padding:14px 0 18px">
+    <div id="triRounds">
 
       <!-- Round 1 (initial) -->
       <div class="tri-round" data-round="1">
         <div class="tri-round__label">Round 1</div>
         {% for player in players %}
         <div class="tri-stepper-row">
-          <span class="avatar tri-stepper-avatar" style="background:#1f9d57">{{ player.name[0].upper() }}</span>
+          <span class="avatar tri-stepper-avatar">{{ player.name[0].upper() }}</span>
           <span class="tri-stepper-name">{{ player.name }}</span>
           <button type="button" class="touch-btn tri-btn-dec"
                   data-player="{{ player.id }}" data-round="1"
@@ -60,51 +60,6 @@
   </form>
 </div>
 
-<style>
-.tri-page { padding-bottom: 80px; }
-.tri-lead {
-  display: flex; gap: 9px; padding: 14px 0;
-  position: sticky; top: 0; background: #fff; border-bottom: 1px solid #eef1f0; z-index: 5;
-}
-.tri-lead__card {
-  flex: 1; background: #f6f8f7; border: 1px solid #eef1f0;
-  border-radius: 13px; padding: 9px 8px; text-align: center;
-}
-.tri-lead__avatar { width: 32px; height: 32px; font-size: 14px; margin: 0 auto 6px; }
-.tri-lead__name { font: 700 12px 'Manrope',sans-serif; color: #56606c; }
-.tri-lead__total { font: 800 21px 'Manrope',sans-serif; margin-top: 1px; }
-.tri-round {
-  background: #fff; border: 1px solid #eef1f0;
-  border-radius: 16px; padding: 13px 13px 14px;
-}
-.tri-round__label { font: 800 12.5px 'Manrope',sans-serif; letter-spacing:.06em; color:#9aa3ab; text-transform:uppercase; margin-bottom:11px; }
-.tri-stepper-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
-.tri-stepper-row:last-child { margin-bottom: 0; }
-.tri-stepper-avatar { width: 34px; height: 34px; font-size: 14px; }
-.tri-stepper-name { flex: 1; font: 700 14.5px 'Manrope',sans-serif; min-width: 0; }
-.tri-btn-dec {
-  width: 44px; height: 44px; border-radius: 12px;
-  border: 1px solid #e0e5e1; background: #fff; color: #56606c;
-  font: 700 22px 'Manrope',sans-serif;
-}
-.tri-btn-inc {
-  width: 44px; height: 44px; border-radius: 12px;
-  border: 1px solid #cfe7d9; background: #eef7f1; color: #1f9d57;
-  font: 700 22px 'Manrope',sans-serif;
-}
-.tri-input {
-  width: 60px; height: 44px; border: 1px solid #e0e5e1;
-  border-radius: 11px; text-align: center;
-  font: 800 18px 'Manrope',sans-serif; background: #f7faf8; outline: none;
-}
-.tri-add-round {
-  width: 100%; height: 50px; border-radius: 14px;
-  border: 1.5px dashed #c7d0ca; background: #fff; color: #46707d;
-  font: 700 15px 'Manrope',sans-serif; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  margin-bottom: 12px; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
-}
-</style>
 
 <script>
 (function () {

@@ -2,7 +2,7 @@
 {% block content %}
 
 <div class="hist-page">
-  <h2 style="margin:0 0 0">Score History</h2>
+  <h2>Score History</h2>
 
   <!-- Filter chips -->
   <div class="hist-chips" id="histChips">
@@ -13,7 +13,7 @@
   </div>
 
   {% if sessions %}
-  <div id="histList" style="display:flex;flex-direction:column;gap:13px;padding:14px 0 18px">
+  <div id="histList">
     {% for s in sessions %}
     {% set game_lower = s.game | lower %}
     {% if game_lower == 'yahtzee' %}{% set badge_color = '#1f9d57' %}{% set badge_init = 'Y' %}
@@ -33,7 +33,7 @@
       <!-- Player rows -->
       {% for r in s.rows %}
       <div class="hist-row {% if r.win %}hist-row--win{% endif %}">
-        <span class="avatar hist-row__avatar" style="background:#1f9d57">{{ r.name[0].upper() }}</span>
+        <span class="avatar hist-row__avatar">{{ r.name[0].upper() }}</span>
         <span class="hist-row__name">{{ r.name }}</span>
         {% if r.win %}<span class="hist-winner-pill">Winner</span>{% endif %}
         <span class="hist-row__score">{{ r.total if r.total is not none else r.score }}</span>
@@ -43,57 +43,14 @@
     {% endfor %}
   </div>
   {% else %}
-  <p style="color:#9aa3ab;padding:20px 2px">No scores recorded yet.</p>
+  <p class="hist-empty">No scores recorded yet.</p>
   {% endif %}
 
   <div class="sticky-bottom">
-    <a href="{{ url_for('index') }}" class="btn-primary-green" style="background:#fff;color:#232b36;border:1px solid #dde2df">Back to Home</a>
+    <a href="{{ url_for('index') }}" class="btn-primary-green btn-secondary">Back to Home</a>
   </div>
 </div>
 
-<style>
-.hist-page { padding-bottom: 80px; }
-.hist-chips {
-  display: flex; gap: 8px; padding: 13px 0;
-  position: sticky; top: 0; background: #fff; border-bottom: 1px solid #eef1f0;
-  z-index: 5; overflow-x: auto; -webkit-overflow-scrolling: touch;
-}
-.hist-chip {
-  padding: 8px 15px; border-radius: 999px;
-  font: 700 13.5px 'Manrope',sans-serif; cursor: pointer;
-  border: 1px solid #e2e6e3; background: #fff; color: #56606c;
-  flex-shrink: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
-}
-.hist-chip--active { border-color: #232b36; background: #232b36; color: #fff; }
-.hist-card {
-  background: #fff; border: 1px solid #eef1f0;
-  border-radius: 16px; overflow: hidden;
-}
-.hist-card__header {
-  display: flex; align-items: center; gap: 10px;
-  padding: 12px 14px; border-bottom: 1px solid #f1f4f3;
-}
-.hist-badge {
-  width: 36px; height: 36px; border-radius: 10px;
-  color: #fff; display: flex; align-items: center; justify-content: center;
-  font: 800 15px 'Manrope',sans-serif; flex-shrink: 0;
-}
-.hist-card__game { font: 800 15px 'Manrope',sans-serif; }
-.hist-card__when { font: 600 12px 'Manrope',sans-serif; color: #9aa3ab; }
-.hist-row {
-  display: flex; align-items: center; gap: 11px;
-  padding: 9px 14px; background: #fff; border-bottom: 1px solid #f4f6f5;
-}
-.hist-row:last-child { border-bottom: none; }
-.hist-row--win { background: #fffaef; }
-.hist-row__avatar { width: 30px; height: 30px; font-size: 12px; }
-.hist-row__name { flex: 1; font: 700 14.5px 'Manrope',sans-serif; }
-.hist-winner-pill {
-  font: 800 10px 'Manrope',sans-serif; letter-spacing:.06em; text-transform:uppercase;
-  background: #fdf0d2; color: #b07d12; padding: 3px 8px; border-radius: 999px;
-}
-.hist-row__score { font: 800 16px 'Manrope',sans-serif; color: #232b36; min-width: 46px; text-align: right; }
-</style>
 
 <script>
 function histFilter(btn) {

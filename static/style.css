@@ -434,6 +434,7 @@ button, .btn-touch, [onclick] {
     width: 100%;
     text-decoration: none;
     -webkit-tap-highlight-color: transparent;
+    padding: 0;
 }
 .btn-primary-green:disabled,
 .btn-primary-green.disabled {
@@ -469,3 +470,108 @@ button, .btn-touch, [onclick] {
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
 }
+
+/* ===== AVATAR DEFAULT ===== */
+.avatar { background: #1f9d57; }
+
+/* ===== PAGE HEADINGS ===== */
+.ytz-page > h2,
+.uno-page > h2 { margin: 0 0 12px; }
+.tri-page > h2,
+.hist-page > h2 { margin: 0; }
+
+/* ===== SECONDARY BUTTON ===== */
+.btn-secondary { background: #fff; color: #232b36; border: 1px solid #dde2df; }
+.btn-secondary:hover { background: #f5f7f6; }
+
+/* ===== PLAYER SELECTION ===== */
+.player-selection { padding-bottom: 80px; }
+.sp-box { background: #fff; border: 1px solid #e6ece8; border-radius: 18px; padding: 13px; margin-bottom: 14px; }
+.sp-box--playing { border-color: #b8dfc8; }
+.sp-box__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.sp-box__label { font: 800 13px 'Manrope',sans-serif; color: #8b949c; }
+.sp-box__label--green { color: #1f9d57; }
+.sp-box__hint { font: 600 11.5px 'Manrope',sans-serif; color: #9aa3ab; }
+.sp-empty { font: 600 13px 'Manrope',sans-serif; color: #9aa3ab; padding: 10px 2px; margin: 0; }
+.sp-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.sp-item { display: flex; align-items: center; gap: 10px; background: #fafbfb; border: 1px solid #eef1f0; border-radius: 13px; padding: 9px 11px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; min-height: 52px; }
+.sp-item--playing { background: #f4faf6; border-color: #dcebe1; }
+.sp-avatar { width: 36px; height: 36px; font-size: 15px; }
+.sp-name { flex: 1; font: 700 15px 'Manrope',sans-serif; }
+.sp-add-icon { width: 30px; height: 30px; border-radius: 9px; background: #e7f5ec; color: #1f9d57; display: flex; align-items: center; justify-content: center; font: 700 21px 'Manrope',sans-serif; flex-shrink: 0; }
+.sp-turn { width: 24px; height: 24px; border-radius: 7px; background: #1f9d57; color: #fff; display: flex; align-items: center; justify-content: center; font: 800 13px 'Manrope',sans-serif; flex-shrink: 0; }
+.sp-reorder { width: 36px; height: 36px; border-radius: 10px; border: 1px solid #e2e6e3; background: #fff; color: #3c454e; display: flex; align-items: center; justify-content: center; font: 700 16px 'Manrope',sans-serif; cursor: pointer; flex-shrink: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; padding: 0; }
+.sp-reorder:disabled { opacity: 0.3; }
+.sp-remove { width: 36px; height: 36px; border-radius: 10px; border: 1px solid #f2dada; background: #fff; color: #d6685e; display: flex; align-items: center; justify-content: center; font: 700 17px 'Manrope',sans-serif; cursor: pointer; flex-shrink: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; padding: 0; }
+
+/* ===== UNO SCORE ENTRY ===== */
+.uno-page { padding-bottom: 80px; }
+.uno-hint { background: #eef6f1; border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; font: 600 13.5px/1.45 'Manrope',sans-serif; color: #3f6b53; }
+.uno-section-label { font: 800 11.5px 'Manrope',sans-serif; letter-spacing: .1em; color: #9aa3ab; text-transform: uppercase; margin: 0 2px 9px; }
+.uno-list { display: flex; flex-direction: column; gap: 9px; }
+.uno-item { display: flex; align-items: center; gap: 13px; padding: 11px 13px; border-radius: 16px; border: 2px solid #e6e9e8; background: #fff; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; min-height: 66px; }
+.uno-item--ranked { border-color: #1f9d57; background: #e7f5ec; }
+.uno-place { width: 36px; height: 36px; border-radius: 10px; border: 2px dashed #cfd6d3; color: #cfd6d3; display: flex; align-items: center; justify-content: center; font: 800 18px 'Manrope',sans-serif; flex-shrink: 0; }
+.uno-place--ranked { border: none; color: #fff; }
+.uno-avatar { width: 42px; height: 42px; font-size: 17px; }
+.uno-name { flex: 1; font: 700 16px 'Manrope',sans-serif; }
+.uno-medal { font: 600 12px 'Manrope',sans-serif; color: #b6bdc2; }
+
+/* ===== YAHTZEE SCORE ENTRY ===== */
+.ytz-page { padding-bottom: 80px; }
+.ytz-tabs { display: flex; gap: 8px; padding: 4px 0 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; position: sticky; top: 0; background: #fff; z-index: 5; }
+/* color: #232b36 overrides form button { color: white } */
+.ytz-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 9px 4px; border-radius: 13px; border: 2px solid #eef1f0; background: #fff; cursor: pointer; font: 700 13.5px 'Manrope',sans-serif; min-width: 80px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; color: #232b36; }
+.ytz-tab--active { border-color: #1f9d57; background: #e7f5ec; }
+.ytz-tab-avatar { width: 22px; height: 22px; font-size: 10px; }
+.ytz-panel--hidden { display: none; }
+.ytz-banner { display: flex; align-items: center; justify-content: space-between; background: #232b36; border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; }
+.ytz-banner__label { font: 700 12px 'Manrope',sans-serif; color: #9aa9b4; letter-spacing: .04em; text-transform: uppercase; }
+.ytz-banner__sub { font: 600 12px 'Manrope',sans-serif; color: #aebac3; margin-top: 4px; }
+.ytz-banner__total { font: 800 34px 'Manrope',sans-serif; color: #fff; line-height: 1; }
+.ytz-section-label { font: 800 11px 'Manrope',sans-serif; letter-spacing: .1em; color: #9aa3ab; text-transform: uppercase; margin: 0 2px 8px; }
+.ytz-row + .ytz-section-label { margin-top: 12px; }
+.ytz-row { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid #eef1f0; border-radius: 13px; padding: 8px 10px 8px 14px; margin-bottom: 8px; }
+.ytz-row__label { flex: 1; font: 700 14.5px 'Manrope',sans-serif; }
+/* .ytz-row .ytz-input specificity (0,2,0) beats form input[type="number"] (0,1,2) */
+.ytz-row .ytz-input { width: 78px; height: 48px; border: 1px solid #e0e5e1; border-radius: 11px; text-align: center; font: 700 19px 'Manrope',sans-serif; background: #f7faf8; outline: none; flex-shrink: 0; padding: 0; }
+
+/* ===== TRIOMINOS SCORE ENTRY ===== */
+.tri-page { padding-bottom: 80px; }
+.tri-lead { display: flex; gap: 9px; padding: 14px 0; position: sticky; top: 0; background: #fff; border-bottom: 1px solid #eef1f0; z-index: 5; }
+.tri-lead__card { flex: 1; background: #f6f8f7; border: 1px solid #eef1f0; border-radius: 13px; padding: 9px 8px; text-align: center; }
+.tri-lead__avatar { width: 32px; height: 32px; font-size: 14px; margin: 0 auto 6px; }
+.tri-lead__name { font: 700 12px 'Manrope',sans-serif; color: #56606c; }
+.tri-lead__total { font: 800 21px 'Manrope',sans-serif; margin-top: 1px; }
+#triRounds { display: flex; flex-direction: column; gap: 12px; padding: 14px 0 18px; }
+.tri-round { background: #fff; border: 1px solid #eef1f0; border-radius: 16px; padding: 13px 13px 14px; }
+.tri-round__label { font: 800 12.5px 'Manrope',sans-serif; letter-spacing: .06em; color: #9aa3ab; text-transform: uppercase; margin-bottom: 11px; }
+.tri-stepper-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.tri-stepper-row:last-child { margin-bottom: 0; }
+.tri-stepper-avatar { width: 34px; height: 34px; font-size: 14px; }
+.tri-stepper-name { flex: 1; font: 700 14.5px 'Manrope',sans-serif; min-width: 0; }
+/* padding: 0 overrides form button { padding: 12px 20px } */
+.tri-btn-dec { width: 44px; height: 44px; border-radius: 12px; border: 1px solid #e0e5e1; background: #fff; color: #56606c; font: 700 22px 'Manrope',sans-serif; padding: 0; }
+.tri-btn-inc { width: 44px; height: 44px; border-radius: 12px; border: 1px solid #cfe7d9; background: #eef7f1; color: #1f9d57; font: 700 22px 'Manrope',sans-serif; padding: 0; }
+.tri-input { width: 60px; height: 44px; border: 1px solid #e0e5e1; border-radius: 11px; text-align: center; font: 800 18px 'Manrope',sans-serif; background: #f7faf8; outline: none; padding: 0; }
+.tri-add-round { width: 100%; height: 50px; border-radius: 14px; border: 1.5px dashed #c7d0ca; background: #fff; color: #46707d; font: 700 15px 'Manrope',sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; margin-bottom: 12px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; padding: 0; }
+
+/* ===== SCORE HISTORY ===== */
+.hist-page { padding-bottom: 80px; }
+#histList { display: flex; flex-direction: column; gap: 13px; padding: 14px 0 18px; }
+.hist-empty { color: #9aa3ab; padding: 20px 2px; }
+.hist-chips { display: flex; gap: 8px; padding: 13px 0; position: sticky; top: 0; background: #fff; border-bottom: 1px solid #eef1f0; z-index: 5; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.hist-chip { padding: 8px 15px; border-radius: 999px; font: 700 13.5px 'Manrope',sans-serif; cursor: pointer; border: 1px solid #e2e6e3; background: #fff; color: #56606c; flex-shrink: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.hist-chip--active { border-color: #232b36; background: #232b36; color: #fff; }
+.hist-card { background: #fff; border: 1px solid #eef1f0; border-radius: 16px; overflow: hidden; }
+.hist-card__header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid #f1f4f3; }
+.hist-badge { width: 36px; height: 36px; border-radius: 10px; color: #fff; display: flex; align-items: center; justify-content: center; font: 800 15px 'Manrope',sans-serif; flex-shrink: 0; }
+.hist-card__game { font: 800 15px 'Manrope',sans-serif; }
+.hist-card__when { font: 600 12px 'Manrope',sans-serif; color: #9aa3ab; }
+.hist-row { display: flex; align-items: center; gap: 11px; padding: 9px 14px; background: #fff; border-bottom: 1px solid #f4f6f5; }
+.hist-row:last-child { border-bottom: none; }
+.hist-row--win { background: #fffaef; }
+.hist-row__avatar { width: 30px; height: 30px; font-size: 12px; }
+.hist-row__name { flex: 1; font: 700 14.5px 'Manrope',sans-serif; }
+.hist-winner-pill { font: 800 10px 'Manrope',sans-serif; letter-spacing: .06em; text-transform: uppercase; background: #fdf0d2; color: #b07d12; padding: 3px 8px; border-radius: 999px; }
+.hist-row__score { font: 800 16px 'Manrope',sans-serif; color: #232b36; min-width: 46px; text-align: right; }
