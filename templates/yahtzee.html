@@ -1,63 +1,122 @@
-
 {% extends 'base.html' %}
-
 {% block content %}
-<div class="container">
-    <h1 class="my-4">{{ game['name'] }}</h1>
-    <form action="{{ url_for('calculate_yahtzee', game_id=game['id'], player_ids=player_ids) }}" method="post">
-        <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Category</th>
-                        {% for player in players %}
-                        <th data-col="{{ loop.index0 }}">{{ player['name'] }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for category in ['Ones', 'Twos', 'Threes', 'Fours', 'Fives', 'Sixes'] %}
-                    <tr data-row="{{ loop.index0 }}">
-                        <td>{{ category }}</td>
-                        {% set current_row_index = loop.index0 %}
-                        {% for player in players %}
-                        <td><input type="number" name="{{ player['id'] }}_{{ category.lower() }}" data-player="{{ player['id'] }}" data-category="upper" class="form-control score-input" min="0" data-row="{{ current_row_index }}" data-col="{{ loop.index0 }}"></td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                    <tr class="table-info">
-                        <td>Subtotal</td>
-                        {% for player in players %}
-                        <td id="subtotal-{{ player['id'] }}" class="text-center" data-col="{{ loop.index0 }}">0</td>
-                        {% endfor %}
-                    </tr>
-                    <tr class="table-info">
-                        <td>Bonus (+35 if >62)</td>
-                        {% for player in players %}
-                        <td id="bonus-{{ player['id'] }}" class="text-center" data-col="{{ loop.index0 }}">0</td>
-                        {% endfor %}
-                    </tr>
-                    {% for category in ['One Pair', 'Two Pair', 'Three of a Kind', 'Four of a Kind', 'Full House', 'Small Straight', 'Large Straight', 'Chance', 'Yahtzee'] %}
-                    <tr data-row="{{ loop.index0 + 6 }}"> {# +6 to account for upper section categories and subtotal/bonus rows #}
-                        <td>{{ category }}</td>
-                        {% set current_row_index = loop.index0 + 6 %}
-                        {% for player in players %}
-                        <td><input type="number" name="{{ player['id'] }}_{{ category.lower().replace(' ', '_') }}" data-player="{{ player['id'] }}" data-category="lower" class="form-control score-input" min="0" data-row="{{ current_row_index }}" data-col="{{ loop.index0 }}"></td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                    <tr class="table-primary">
-                        <td><strong>Total</strong></td>
-                        {% for player in players %}
-                        <td id="total-{{ player['id'] }}" class="text-center" data-col="{{ loop.index0 }}"><strong>0</strong></td>
-                        {% endfor %}
-                    </tr>
-                </tbody>
-            </table>
+
+<div class="ytz-page">
+  <h2 style="margin:0 0 12px">{{ game['name'] }}</h2>
+
+  <form id="yahtzeeForm" action="{{ url_for('calculate_yahtzee', game_id=game['id'], player_ids=player_ids) }}" method="post">
+
+    <!-- Player tabs -->
+    <div class="ytz-tabs" id="ytzTabs">
+      {% for player in players %}
+      <button type="button"
+              class="ytz-tab {% if loop.first %}ytz-tab--active{% endif %}"
+              data-player-id="{{ player['id'] }}"
+              onclick="ytzSetTab('{{ player['id'] }}')">
+        <span class="avatar ytz-tab-avatar" style="background:#1f9d57">{{ player['name'][0].upper() }}</span>
+        <span>{{ player['name'] }}</span>
+      </button>
+      {% endfor %}
+    </div>
+
+    {% for player in players %}
+    <!-- Panel for {{ player['name'] }} -->
+    <div class="ytz-panel {% if not loop.first %}ytz-panel--hidden{% endif %}"
+         id="panel-{{ player['id'] }}"
+         data-player-id="{{ player['id'] }}">
+
+      <!-- Live total banner -->
+      <div class="ytz-banner">
+        <div>
+          <div class="ytz-banner__label">{{ player['name'] }} · Total</div>
+          <div class="ytz-banner__sub">
+            Upper <span id="upper-{{ player['id'] }}">0</span> ·
+            Bonus <span id="bonus-{{ player['id'] }}">0</span>
+          </div>
         </div>
-        <button type="submit" class="btn btn-primary">Submit Scores</button>
-    </form>
+        <div class="ytz-banner__total" id="total-{{ player['id'] }}">0</div>
+      </div>
+
+      <!-- Upper section -->
+      <div class="ytz-section-label">Upper section</div>
+      {% for category in ['Ones', 'Twos', 'Threes', 'Fours', 'Fives', 'Sixes'] %}
+      <div class="ytz-row">
+        <label class="ytz-row__label" for="{{ player['id'] }}_{{ category.lower() }}">{{ category }}</label>
+        <input type="number"
+               id="{{ player['id'] }}_{{ category.lower() }}"
+               name="{{ player['id'] }}_{{ category.lower() }}"
+               class="ytz-input score-input"
+               data-player="{{ player['id'] }}"
+               data-section="upper"
+               inputmode="numeric"
+               min="0"
+               placeholder="0">
+      </div>
+      {% endfor %}
+
+      <!-- Lower section -->
+      <div class="ytz-section-label" style="margin-top:12px">Lower section</div>
+      {% for category in ['One Pair', 'Two Pair', 'Three of a Kind', 'Four of a Kind', 'Full House', 'Small Straight', 'Large Straight', 'Chance', 'Yahtzee'] %}
+      <div class="ytz-row">
+        <label class="ytz-row__label" for="{{ player['id'] }}_{{ category.lower().replace(' ', '_') }}">{{ category }}</label>
+        <input type="number"
+               id="{{ player['id'] }}_{{ category.lower().replace(' ', '_') }}"
+               name="{{ player['id'] }}_{{ category.lower().replace(' ', '_') }}"
+               class="ytz-input score-input"
+               data-player="{{ player['id'] }}"
+               data-section="lower"
+               inputmode="numeric"
+               min="0"
+               placeholder="0">
+      </div>
+      {% endfor %}
+
+    </div>
+    {% endfor %}
+
+    <div class="sticky-bottom">
+      <button type="submit" class="btn-primary-green">Submit Scores</button>
+    </div>
+
+  </form>
 </div>
+
+<style>
+.ytz-page { padding-bottom: 80px; }
+.ytz-tabs {
+  display: flex; gap: 8px; padding: 0 0 12px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  position: sticky; top: 0; background: #fff; z-index: 5; padding-top: 4px;
+}
+.ytz-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 9px 4px; border-radius: 13px; border: 2px solid #eef1f0;
+  background: #fff; cursor: pointer; font: 700 13.5px 'Manrope',sans-serif;
+  min-width: 80px; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.ytz-tab--active { border-color: #1f9d57; background: #e7f5ec; }
+.ytz-tab-avatar { width: 22px; height: 22px; font-size: 10px; }
+.ytz-panel--hidden { display: none; }
+.ytz-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #232b36; border-radius: 16px; padding: 14px 16px; margin-bottom: 12px;
+}
+.ytz-banner__label { font: 700 12px 'Manrope',sans-serif; color: #9aa9b4; letter-spacing: .04em; text-transform: uppercase; }
+.ytz-banner__sub { font: 600 12px 'Manrope',sans-serif; color: #aebac3; margin-top: 4px; }
+.ytz-banner__total { font: 800 34px 'Manrope',sans-serif; color: #fff; line-height: 1; }
+.ytz-section-label { font: 800 11px 'Manrope',sans-serif; letter-spacing: .1em; color: #9aa3ab; text-transform: uppercase; margin: 0 2px 8px; }
+.ytz-row {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; border: 1px solid #eef1f0; border-radius: 13px;
+  padding: 8px 10px 8px 14px; margin-bottom: 8px;
+}
+.ytz-row__label { flex: 1; font: 700 14.5px 'Manrope',sans-serif; }
+.ytz-input {
+  width: 78px; height: 48px; border: 1px solid #e0e5e1; border-radius: 11px;
+  text-align: center; font: 700 19px 'Manrope',sans-serif; background: #f7faf8;
+  outline: none; flex-shrink: 0;
+}
+</style>
 
 <script src="{{ url_for('static', filename='yahtzee.js') }}"></script>
 {% endblock %}
