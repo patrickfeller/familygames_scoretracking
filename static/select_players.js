@@ -2,6 +2,11 @@
   // State: ordered array of player objects {id, name}
   let playing = [];
 
+  // HTML escape helper to prevent XSS
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
   // Collect all players from the available list as initial source of truth
   const availList = document.getElementById('availablePlayers');
   const selList = document.getElementById('selectedPlayers');
@@ -30,8 +35,8 @@
       li.className = 'sp-item sp-item--playing';
       li.innerHTML = `
         <span class="sp-turn">${i + 1}</span>
-        <span class="avatar sp-avatar" style="background:${p.color}">${p.initial}</span>
-        <span class="sp-name">${p.name}</span>
+        <span class="avatar sp-avatar" style="background:${p.color}">${esc(p.initial)}</span>
+        <span class="sp-name">${esc(p.name)}</span>
         <button class="sp-reorder" data-id="${p.id}" data-dir="-1" ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
         <button class="sp-reorder" data-id="${p.id}" data-dir="1" ${i === playing.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
         <button class="sp-remove" data-id="${p.id}" aria-label="Remove">×</button>
@@ -47,8 +52,8 @@
       li.dataset.playerId = p.id;
       li.dataset.playerName = p.name;
       li.innerHTML = `
-        <span class="avatar sp-avatar" style="background:${p.color}">${p.initial}</span>
-        <span class="sp-name">${p.name}</span>
+        <span class="avatar sp-avatar" style="background:${p.color}">${esc(p.initial)}</span>
+        <span class="sp-name">${esc(p.name)}</span>
         <span class="sp-add-icon">+</span>
       `;
       availList.appendChild(li);
