@@ -1,6 +1,6 @@
 /* General Body Styles */
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: 'Manrope', 'Arial', sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f4f7f6;
@@ -382,11 +382,6 @@ footer {
 
 /* ===== MOBILE / TOUCH OVERRIDES ===== */
 
-/* Use Manrope everywhere */
-body {
-    font-family: 'Manrope', 'Arial', sans-serif;
-}
-
 /* Prevent iOS from zooming on input focus (needs 16px font-size) */
 input[type="text"],
 input[type="number"],
@@ -458,6 +453,9 @@ button, .btn-touch, [onclick] {
     color: #fff;
     font-weight: 700;
     flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
 }
 
 /* Touch-target minimum */
