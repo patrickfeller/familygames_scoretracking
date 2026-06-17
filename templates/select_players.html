@@ -2,41 +2,87 @@
 {% block content %}
 
 <section class="player-selection">
-    <h2>Select Players for {{ game['name'] }}</h2>
+  <h2>Select Players for {{ game['name'] }}</h2>
 
-    <div class="player-lists-container">
-        <div class="player-list-box">
-            <h3>Available Players</h3>
-            <ul id="availablePlayers" class="player-list">
-                {% for player in players %}
-                <li draggable="true" data-player-id="{{ player['id'] }}">{{ player['name'] }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <div class="player-list-box">
-            <h3>Selected Players (Drag to reorder)</h3>
-            <ul id="selectedPlayers" class="player-list">
-                <!-- Selected players will be dragged here -->
-            </ul>
-        </div>
+  <!-- PLAYING box -->
+  <div class="sp-box sp-box--playing">
+    <div class="sp-box__header">
+      <span class="sp-box__label sp-box__label--green">PLAYING · <span id="playingCount">0</span></span>
+      <span class="sp-box__hint">tap × to remove</span>
     </div>
+    <p id="playingEmpty" class="sp-empty">No players selected yet.</p>
+    <ul id="selectedPlayers" class="sp-list"></ul>
+  </div>
 
-    <div class="continue-button-container">
-        <form id="selectPlayersForm" method="post">
-            <input type="hidden" name="selected_player_ids" id="selectedPlayerIdsInput">
-            <button type="submit" class="button">Continue with Selected Players</button>
-        </form>
+  <!-- AVAILABLE box -->
+  <div class="sp-box">
+    <div class="sp-box__header">
+      <span class="sp-box__label">AVAILABLE · tap to add</span>
     </div>
+    <p id="availableEmpty" class="sp-empty" style="display:none">Everyone's in the game.</p>
+    <ul id="availablePlayers" class="sp-list">
+      {% for player in players %}
+      <li class="sp-item sp-item--avail" data-player-id="{{ player['id'] }}" data-player-name="{{ player['name'] }}">
+        <span class="avatar sp-avatar" style="background:#1f9d57">{{ player['name'][0].upper() }}</span>
+        <span class="sp-name">{{ player['name'] }}</span>
+        <span class="sp-add-icon">+</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
 
-    <div class="add-player-section">
-        <h3>Add New Player</h3>
-        <form id="addPlayerForm" method="post" action="{{ url_for('select_players', game_id=game['id']) }}">
-            <input type="text" name="new_player_name" placeholder="New player name" required>
-            <button type="submit" name="action" value="add_player">Add Player</button>
-        </form>
-    </div>
+  <!-- Add new player -->
+  <div class="add-player-section">
+    <h3>Add New Player</h3>
+    <form id="addPlayerForm" method="post" action="{{ url_for('select_players', game_id=game['id']) }}">
+      <input type="text" name="new_player_name" placeholder="New player name" required>
+      <button type="submit" name="action" value="add_player">Add Player</button>
+    </form>
+  </div>
+
+  <!-- Submit -->
+  <div class="sticky-bottom">
+    <form id="selectPlayersForm" method="post">
+      <input type="hidden" name="selected_player_ids" id="selectedPlayerIdsInput">
+      <button type="submit" id="startGameBtn" class="btn-primary-green disabled" disabled>
+        Start game · <span id="startCount">0</span> players
+      </button>
+    </form>
+  </div>
 </section>
+
+<style>
+.player-selection { padding-bottom: 80px; }
+.sp-box {
+  background: #fff;
+  border: 1px solid #e6ece8;
+  border-radius: 18px;
+  padding: 13px;
+  margin-bottom: 14px;
+}
+.sp-box--playing { border-color: #b8dfc8; }
+.sp-box__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.sp-box__label { font: 800 13px 'Manrope',sans-serif; color: #8b949c; }
+.sp-box__label--green { color: #1f9d57; }
+.sp-box__hint { font: 600 11.5px 'Manrope',sans-serif; color: #9aa3ab; }
+.sp-empty { font: 600 13px 'Manrope',sans-serif; color: #9aa3ab; padding: 10px 2px; margin: 0; }
+.sp-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.sp-item {
+  display: flex; align-items: center; gap: 10px;
+  background: #fafbfb; border: 1px solid #eef1f0; border-radius: 13px;
+  padding: 9px 11px; cursor: pointer; user-select: none;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  min-height: 52px;
+}
+.sp-item--playing { background: #f4faf6; border-color: #dcebe1; }
+.sp-avatar { width: 36px; height: 36px; font-size: 15px; }
+.sp-name { flex: 1; font: 700 15px 'Manrope',sans-serif; }
+.sp-add-icon { width: 30px; height: 30px; border-radius: 9px; background: #e7f5ec; color: #1f9d57; display: flex; align-items: center; justify-content: center; font: 700 21px 'Manrope',sans-serif; flex-shrink: 0; }
+.sp-turn { width: 24px; height: 24px; border-radius: 7px; background: #1f9d57; color: #fff; display: flex; align-items: center; justify-content: center; font: 800 13px 'Manrope',sans-serif; flex-shrink: 0; }
+.sp-reorder { width: 36px; height: 36px; border-radius: 10px; border: 1px solid #e2e6e3; background: #fff; color: #3c454e; display: flex; align-items: center; justify-content: center; font: 700 16px 'Manrope',sans-serif; cursor: pointer; flex-shrink: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.sp-reorder:disabled { opacity: 0.3; }
+.sp-remove { width: 36px; height: 36px; border-radius: 10px; border: 1px solid #f2dada; background: #fff; color: #d6685e; display: flex; align-items: center; justify-content: center; font: 700 17px 'Manrope',sans-serif; cursor: pointer; flex-shrink: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+</style>
 
 <script src="{{ url_for('static', filename='select_players.js') }}"></script>
 {% endblock %}
