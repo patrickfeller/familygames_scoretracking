@@ -379,3 +379,95 @@ footer {
     font-size: 1.2em;
     outline: 2px solid #ffcc00; /* A border to make it stand out more */
 }
+
+/* ===== MOBILE / TOUCH OVERRIDES ===== */
+
+/* Use Manrope everywhere */
+body {
+    font-family: 'Manrope', 'Arial', sans-serif;
+}
+
+/* Prevent iOS from zooming on input focus (needs 16px font-size) */
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+    font-size: 16px !important;
+}
+
+/* Remove tap highlight flash on interactive elements */
+button, .btn-touch, [onclick] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+/* Responsive: full-width main on phones */
+@media (max-width: 768px) {
+    main {
+        max-width: 100%;
+        margin: 0;
+        border-radius: 0;
+        padding: 12px;
+    }
+    header h1 {
+        font-size: 1.4em;
+    }
+}
+
+/* Sticky action bar pattern */
+.sticky-bottom {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding: 12px 16px 16px;
+    border-top: 1px solid #eef1f0;
+    z-index: 10;
+}
+
+/* Primary action button */
+.btn-primary-green {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 56px;
+    border-radius: 16px;
+    background: #1f9d57;
+    color: #fff;
+    font: 800 17px 'Manrope', sans-serif;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+}
+.btn-primary-green:disabled,
+.btn-primary-green.disabled {
+    background: #cdd4ce;
+    cursor: default;
+}
+.btn-primary-green:hover:not(:disabled):not(.disabled) {
+    background: #1a8a4b;
+}
+
+/* Avatar circle */
+.avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #fff;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Touch-target minimum */
+.touch-btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
