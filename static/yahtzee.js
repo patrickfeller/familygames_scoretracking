@@ -31,6 +31,7 @@ function snapToValid(category, value) {
 function ytzStep(playerId, category, direction) {
   const input = document.getElementById(`${playerId}_${category}`);
   if (!input) return;
+  if (input.closest('.ytz-row--skipped')) return;
   const values = VALID_VALUES[category];
   if (!values) return;
 
@@ -42,6 +43,23 @@ function ytzStep(playerId, category, direction) {
   }
   const newIdx = Math.max(0, Math.min(idx + direction, values.length - 1));
   input.value = values[newIdx];
+  ytzRecalc(playerId);
+}
+
+function ytzToggleSkip(playerId, category) {
+  const input = document.getElementById(`${playerId}_${category}`);
+  if (!input) return;
+  const row = input.closest('.ytz-row');
+  if (!row) return;
+
+  const skipped = row.classList.toggle('ytz-row--skipped');
+  if (skipped) {
+    input.dataset.prevValue = input.value;
+    input.value = 0;
+  } else {
+    input.value = input.dataset.prevValue || '';
+    delete input.dataset.prevValue;
+  }
   ytzRecalc(playerId);
 }
 
@@ -78,6 +96,13 @@ document.addEventListener('DOMContentLoaded', function () {
     btn.addEventListener('click', () => {
       const dir = btn.classList.contains('ytz-btn-inc') ? 1 : -1;
       ytzStep(btn.dataset.player, btn.dataset.category, dir);
+    });
+  });
+
+  // Skip buttons
+  document.querySelectorAll('.ytz-btn-skip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      ytzToggleSkip(btn.dataset.player, btn.dataset.category);
     });
   });
 

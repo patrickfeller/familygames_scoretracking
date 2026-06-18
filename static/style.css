@@ -537,6 +537,14 @@ button, .btn-touch, [onclick] {
 .ytz-row .ytz-input { width: 78px; height: 48px; border: 1px solid #e0e5e1; border-radius: 11px; text-align: center; font: 700 19px 'Manrope',sans-serif; background: #f7faf8; outline: none; flex-shrink: 0; padding: 0; }
 .ytz-btn-dec { width: 44px; height: 44px; border-radius: 12px; border: 1px solid #e0e5e1; background: #fff; color: #56606c; font: 700 22px 'Manrope',sans-serif; padding: 0; flex-shrink: 0; }
 .ytz-btn-inc { width: 44px; height: 44px; border-radius: 12px; border: 1px solid #cfe7d9; background: #eef7f1; color: #1f9d57; font: 700 22px 'Manrope',sans-serif; padding: 0; flex-shrink: 0; }
+.ytz-btn-skip { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #e0e5e1; background: #fff; color: #b0b8c1; font-size: 18px; padding: 0; flex-shrink: 0; cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.ytz-btn-skip:hover { background: #fef2f2; color: #d14; border-color: #f0c0c0; }
+.ytz-row--skipped { background: #f3f4f5; border-color: #e4e6e8; }
+.ytz-row--skipped .ytz-row__label { color: #b0b8c1; text-decoration: line-through; }
+.ytz-row--skipped .ytz-btn-dec,
+.ytz-row--skipped .ytz-btn-inc,
+.ytz-row--skipped .ytz-input { opacity: 0.35; pointer-events: none; }
+.ytz-row--skipped .ytz-btn-skip { color: #d14; border-color: #f0c0c0; background: #fef2f2; }
 
 /* ===== TRIOMINOS SCORE ENTRY ===== */
 .tri-page { padding-bottom: 80px; }
