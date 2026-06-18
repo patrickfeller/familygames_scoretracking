@@ -535,6 +535,8 @@ button, .btn-touch, [onclick] {
 .ytz-row__label { flex: 1; font: 700 14.5px 'Manrope',sans-serif; }
 /* .ytz-row .ytz-input specificity (0,2,0) beats form input[type="number"] (0,1,2) */
 .ytz-row .ytz-input { width: 78px; height: 48px; border: 1px solid #e0e5e1; border-radius: 11px; text-align: center; font: 700 19px 'Manrope',sans-serif; background: #f7faf8; outline: none; flex-shrink: 0; padding: 0; }
+.ytz-btn-dec { width: 44px; height: 44px; border-radius: 12px; border: 1px solid #e0e5e1; background: #fff; color: #56606c; font: 700 22px 'Manrope',sans-serif; padding: 0; flex-shrink: 0; }
+.ytz-btn-inc { width: 44px; height: 44px; border-radius: 12px; border: 1px solid #cfe7d9; background: #eef7f1; color: #1f9d57; font: 700 22px 'Manrope',sans-serif; padding: 0; flex-shrink: 0; }
 
 /* ===== TRIOMINOS SCORE ENTRY ===== */
 .tri-page { padding-bottom: 80px; }
