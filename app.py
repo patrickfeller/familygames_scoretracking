@@ -7,12 +7,14 @@ import psycopg2.extras
 from psycopg2 import sql
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_wtf.csrf import CSRFProtect
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY')
 app.config['DATABASE_URL'] = os.environ.get('DATABASE_URL')
+csrf = CSRFProtect(app)
 
 # --- Database Operations ---
 def get_db_connection():

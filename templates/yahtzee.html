@@ -5,6 +5,7 @@
   <h2>{{ game['name'] }}</h2>
 
   <form id="yahtzeeForm" action="{{ url_for('calculate_yahtzee', game_id=game['id'], player_ids=player_ids) }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <!-- Player tabs -->
     <div class="ytz-tabs" id="ytzTabs">

@@ -18,6 +18,7 @@ class TestGameLogic(unittest.TestCase):
     def setUpClass(cls):
         cls.app = app.test_client()
         cls.app.testing = True
+        app.config['WTF_CSRF_ENABLED'] = False
         app.config['DB_SCHEMA'] = TEST_SCHEMA
 
         conn = psycopg2.connect(app.config['DATABASE_URL'])

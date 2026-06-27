@@ -28,6 +28,7 @@
 
   <div class="sticky-bottom">
     <form id="unoForm" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" id="unoSubmitBtn" class="btn-primary-green disabled" disabled>
         Rank all {{ players|length }} players (<span id="unoRanked">0</span>/{{ players|length }})
       </button>
@@ -111,6 +112,7 @@
 <section class="score-entry">
   <h2>Enter Scores for {{ game['name'] }}</h2>
   <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <table class="score-table">
       <thead>
         <tr>
