@@ -11,7 +11,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'your_fallback_secret_key')
+app.secret_key = os.environ.get('SECRET_KEY')
 app.config['DATABASE_URL'] = os.environ.get('DATABASE_URL')
 
 # --- Database Operations ---
