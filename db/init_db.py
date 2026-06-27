@@ -29,6 +29,9 @@ def init_db(conn):
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    cur.execute('ALTER TABLE players ENABLE ROW LEVEL SECURITY')
+    cur.execute('ALTER TABLE games ENABLE ROW LEVEL SECURITY')
+    cur.execute('ALTER TABLE scores ENABLE ROW LEVEL SECURITY')
     conn.commit()
     cur.close()
 
