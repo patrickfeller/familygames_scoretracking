@@ -17,6 +17,12 @@
             <a href="{{ url_for('index') }}">Home</a>
             <a href="{{ url_for('history') }}">Score History</a>
             <a href="{{ url_for('ranking') }}">Rankings</a>
+            {% if session.get('authenticated') %}
+            <form method="post" action="{{ url_for('logout') }}" style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="nav-logout">Logout</button>
+            </form>
+            {% endif %}
         </nav>
     </header>
     <main>

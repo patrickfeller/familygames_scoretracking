@@ -6,7 +6,7 @@ import psycopg2
 import psycopg2.extras
 from psycopg2 import sql
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_wtf.csrf import CSRFProtect
 
 load_dotenv()
@@ -15,6 +15,35 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY')
 app.config['DATABASE_URL'] = os.environ.get('DATABASE_URL')
 csrf = CSRFProtect(app)
+
+@app.before_request
+def require_pin():
+    app_pin = os.environ.get('APP_PIN')
+    if not app_pin:
+        return
+    allowed = ('login', 'static')
+    if request.endpoint in allowed:
+        return
+    if not session.get('authenticated'):
+        return redirect(url_for('login'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    app_pin = os.environ.get('APP_PIN')
+    if not app_pin:
+        return redirect(url_for('index'))
+    if request.method == 'POST':
+        pin = request.form.get('pin', '')
+        if pin == app_pin:
+            session['authenticated'] = True
+            return redirect(url_for('index'))
+        flash('Wrong PIN.')
+    return render_template('login.html')
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.pop('authenticated', None)
+    return redirect(url_for('login'))
 
 # --- Database Operations ---
 def get_db_connection():

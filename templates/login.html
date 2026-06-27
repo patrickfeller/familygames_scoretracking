@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="login-page">
+  <h2>Enter PIN</h2>
+  <form method="post" class="login-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="password" name="pin" placeholder="Family PIN" required
+           inputmode="numeric" autocomplete="off" autofocus>
+    <button type="submit" class="btn-primary-green">Enter</button>
+  </form>
+</section>
+{% endblock %}

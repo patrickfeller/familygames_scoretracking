@@ -1,3 +1,4 @@
+import os
 import unittest
 import uuid
 
@@ -19,6 +20,7 @@ class TestGameLogic(unittest.TestCase):
         cls.app = app.test_client()
         cls.app.testing = True
         app.config['WTF_CSRF_ENABLED'] = False
+        os.environ.pop('APP_PIN', None)
         app.config['DB_SCHEMA'] = TEST_SCHEMA
 
         conn = psycopg2.connect(app.config['DATABASE_URL'])
