@@ -114,7 +114,7 @@ def ensure_games():
     conn = get_db_connection()
 
     # List of games that should be in the database
-    required_games = ['Yahtzee', 'Uno', 'Triominos']  # Add more games here
+    required_games = ['Yahtzee', 'Uno', 'Triominos', 'Watten']
 
     for game_name in required_games:
         existing = query_db(conn, 'SELECT COUNT(*) AS count FROM games WHERE name = %s', (game_name,), one=True)
@@ -240,6 +240,8 @@ def enter_scores(game_id):
         return render_template('yahtzee.html', players=players, game=game, player_ids=player_ids)
     elif game_name == 'triominos':
         return render_template('triominos.html', players=players, game=game, player_ids=player_ids)
+    elif game_name == 'watten':
+        return render_template('watten.html', players=players, game=game, player_ids=player_ids, win_target=11)
     return render_template('enter_scores.html', players=players, game=game, is_uno=game_name == 'uno')
 
 @app.route('/calculate_yahtzee/<int:game_id>/<player_ids>', methods=['POST'])
@@ -265,6 +267,23 @@ def calculate_yahtzee(game_id, player_ids):
     session_id = str(uuid.uuid4())
     add_score(game_id, rankings, session_id, player_scores)
     return redirect(url_for('confirmation', session_id=session_id))
+
+@app.route('/calculate_watten/<int:game_id>/<player_ids>', methods=['POST'])
+def calculate_watten(game_id, player_ids):
+    from games.watten import WattenGame
+    watten = WattenGame()
+    player_ids_list = [int(pid) for pid in player_ids.split(',') if pid]
+    conn = get_db_connection()
+    placeholders = ','.join(['%s'] * len(player_ids_list))
+    players = query_db(conn, f'SELECT * FROM players WHERE id IN ({placeholders})', player_ids_list)
+    conn.close()
+    success, rankings, total_scores, message = watten.process_scores(players, request.form)
+    if success:
+        session_id = str(uuid.uuid4())
+        add_score(game_id, rankings, session_id, total_scores)
+        return redirect(url_for('confirmation', session_id=session_id))
+    flash(message)
+    return redirect(url_for('enter_scores', game_id=game_id, player_ids=player_ids))
 
 @app.route('/confirmation/<session_id>')
 def confirmation(session_id):
