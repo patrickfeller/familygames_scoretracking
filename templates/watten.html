@@ -180,14 +180,6 @@ function resetRounds() {
   render();
 }
 
-function rematch() {
-  state.rounds = [];
-  state.gameOver = false;
-  state.winner = null;
-  state.submitted = false;
-  render();
-}
-
 function editTeams() { state.screen = 'setup'; render(); }
 
 function doSubmit() {
@@ -272,6 +264,7 @@ function renderSetup() {
   btn.textContent = valid ? `Start game · ${count} players` : 'Give every team a player';
   btn.style.background = valid ? '#1f9d57' : '#cdd4ce';
   btn.style.cursor = valid ? 'pointer' : 'default';
+  btn.disabled = !valid;
 }
 
 function renderPlay() {
@@ -363,7 +356,7 @@ function renderPlay() {
     primBtn.textContent = 'Start rematch';
     primBtn.style.background = '#1f9d57';
     primBtn.style.color = '#fff';
-    primBtn.onclick = rematch;
+    primBtn.onclick = resetRounds;
   } else {
     primBtn.textContent = 'Clear scores';
     primBtn.style.background = '#eef1f0';
@@ -395,7 +388,6 @@ document.getElementById('add-player-btn').addEventListener('click', addPlayer);
 document.getElementById('start-game-btn').addEventListener('click', startGame);
 document.getElementById('edit-teams-btn').addEventListener('click', editTeams);
 document.getElementById('submit-btn').addEventListener('click', doSubmit);
-document.getElementById('primary-action-btn').addEventListener('click', resetRounds);
 
 render();
 </script>
