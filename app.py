@@ -185,6 +185,9 @@ def select_players(game_id):
 
     players = get_players()
     game = [g for g in get_games() if g['id'] == game_id][0]
+    if game['name'].lower() == 'watten':
+        all_ids = ','.join(str(p['id']) for p in players)
+        return redirect(url_for('enter_scores', game_id=game_id, player_ids=all_ids))
     return render_template('select_players.html', players=players, game=game)
 
 @app.route('/enter_scores/<int:game_id>', methods=['GET', 'POST'])

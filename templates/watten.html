@@ -97,6 +97,8 @@ let state = {
   gameOver: false,
   winner: null,
   submitted: false,
+  bummerl: [0, 0],
+  gamesWon: [0, 0],
 };
 
 function allPlayers() { return [...DB_PLAYERS, ...state.extra]; }
@@ -145,7 +147,26 @@ function startGame() {
   state.rounds = [];
   state.gameOver = false;
   state.winner = null;
+  state.bummerl = [0, 0];
+  state.gamesWon = [0, 0];
+  state.submitted = false;
   render();
+}
+
+function calcBummerl(winnerIdx, rounds) {
+  const loserIdx = 1 - winnerIdx;
+  const loserScore = teamTotal(loserIdx, rounds);
+  let running = [0, 0];
+  let winnerScoreWhenLoserHitNine = null;
+  for (const r of rounds) {
+    running[r.team] += r.pts;
+    if (winnerScoreWhenLoserHitNine === null && running[loserIdx] >= 9) {
+      winnerScoreWhenLoserHitNine = running[winnerIdx];
+    }
+  }
+  if (winnerScoreWhenLoserHitNine !== null && winnerScoreWhenLoserHitNine <= 0) return 4;
+  if (loserScore <= 0) return 2;
+  return 1;
 }
 
 function award(teamIdx, pts) {
@@ -153,11 +174,23 @@ function award(teamIdx, pts) {
   const newRounds = [...state.rounds, { team: teamIdx, pts }];
   const w = checkWin(newRounds);
   state.rounds = newRounds;
-  if (w !== null) { state.gameOver = true; state.winner = w; }
+  if (w !== null) {
+    const loserIdx = 1 - w;
+    const bAdd = calcBummerl(w, newRounds);
+    const newBummerl = [...state.bummerl];
+    newBummerl[loserIdx] += bAdd;
+    const newGamesWon = [...state.gamesWon];
+    newGamesWon[w] += 1;
+    state.bummerl = newBummerl;
+    state.gamesWon = newGamesWon;
+    state.gameOver = true;
+    state.winner = w;
+  }
   render();
 }
 
 function editCell(gi, rawVal) {
+  if (state.gameOver) return;
   const n = parseInt(rawVal, 10);
   const rounds = [...state.rounds];
   if (rawVal.trim() === '' || isNaN(n)) {
@@ -177,6 +210,7 @@ function resetRounds() {
   state.gameOver = false;
   state.winner = null;
   state.submitted = false;
+  // bummerl and gamesWon intentionally persist across rematches
   render();
 }
 
@@ -200,7 +234,7 @@ function doSubmit() {
   [0, 1].forEach(i => {
     add(`team_${i}_name`, state.names[i]);
     add(`team_${i}_players`, dbPlayersInTeam(i).map(p => p.id).join(','));
-    add(`team_${i}_score`, teamTotal(i));
+    add(`team_${i}_score`, state.gamesWon[i]);
   });
   state.submitted = true;
   form.submit();
@@ -280,25 +314,55 @@ function renderPlay() {
   if (state.gameOver && state.winner !== null) {
     banner.style.display = 'flex';
     document.getElementById('winner-name').textContent = `${state.names[state.winner]} wins!`;
-    const losers = [0, 1].filter(i => i !== state.winner).map(i => state.names[i]);
+    const loserIdx = 1 - state.winner;
+    const dots = state.bummerl[loserIdx];
     document.getElementById('bummerl-note').textContent =
-      `${losers.join(' & ')} ${losers.length > 1 ? 'each take' : 'takes'} a black point.`;
+      `${state.names[loserIdx]} now has ${dots} black point${dots !== 1 ? 's' : ''}. Start a rematch?`;
   } else {
     banner.style.display = 'none';
   }
 
   const dim = state.gameOver;
-  document.getElementById('score-cards').innerHTML = [0, 1].map(i => {
+
+  const colsHtml = [0, 1].map(i => {
     const color = TEAM_COLORS[i];
     const total = teamTotal(i);
     const isWinner = state.gameOver && state.winner === i;
-    const pct = Math.min(total / WIN_TARGET, 1) * 100;
+    const nearWin = total >= 9;
     const members = teamPlayers(i);
+    const teamRounds = state.rounds.map((r, gi) => ({ ...r, gi })).filter(r => r.team === i);
+    const hasRounds = teamRounds.length > 0;
 
     const membersHtml = members.map(m =>
       `<span style="${avStyle(playerColor(m),20)}">${esc(initials(m.name))}</span>`
     ).join('');
 
+    // Bummerl dots
+    const bCount = state.bummerl[i];
+    const bDotsHtml = bCount > 0
+      ? `<div style="display:flex;gap:3px">${Array.from({length: bCount}, () =>
+          `<div style="width:8px;height:8px;border-radius:50%;background:#1a1f25;flex:0 0 auto"></div>`
+        ).join('')}</div>`
+      : '';
+
+    // Score cells
+    let cellsContent;
+    if (!hasRounds) {
+      cellsContent = `<div style="text-align:center;font:600 12px Manrope;color:#c2c9c4;padding:10px 0">—</div>`;
+    } else {
+      cellsContent = teamRounds.map(r =>
+        `<input value="${r.pts}" onchange="editCell(${r.gi}, this.value)" inputmode="numeric"
+          style="width:100%;height:34px;border:none;border-bottom:1.5px solid #eef1f0;
+                 text-align:center;font:800 17px Manrope;background:transparent;outline:none;
+                 color:${r.pts < 0 ? '#c0492f' : '#232b36'}" />`
+      ).join('');
+    }
+
+    const nearWinLine = (nearWin && hasRounds)
+      ? `<div style="position:absolute;left:50%;top:0;bottom:0;width:2px;background:${color};transform:translateX(-50%)"></div>`
+      : '';
+
+    // Quick-add buttons
     const buttonsHtml = POINT_BUTTONS.map(pp => {
       const neg = pp < 0;
       const bd = dim ? '#edf0ee' : (neg ? '#eccfcf' : '#cfe7d9');
@@ -311,49 +375,33 @@ function renderPlay() {
                           cursor:${dim?'default':'pointer'}">${pp}</div>`;
     }).join('');
 
-    const cellsHtml = state.rounds.map((r, gi) => {
-      if (r.team !== i) return '';
-      return `<input value="${r.pts}"
-                     onchange="editCell(${gi}, this.value)"
-                     inputmode="numeric"
-                     style="width:46px;height:38px;border:1px solid #e0e5e1;border-radius:10px;
-                            text-align:center;font:800 17px Manrope;background:#f7faf8;
-                            outline:none;color:${r.pts<0?'#c0492f':'#232b36'}" />`;
-    }).join('');
-
-    const noRounds = !state.rounds.some(r => r.team === i);
+    const borderRight = i === 0 ? 'border-right:1.5px solid #e6eae6;' : '';
 
     return `
-      <div style="display:flex;gap:12px;background:${isWinner?'#fffaef':'#fff'};
-                  border:1px solid ${isWinner?'#f0dca0':'#eef1f0'};border-radius:18px;
-                  padding:13px;margin-bottom:11px">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto">
-          <div style="font:800 9px Manrope;letter-spacing:.1em;color:#9aa3ab;text-transform:uppercase">Add</div>
-          ${buttonsHtml}
+      <div style="flex:1;min-width:0;padding:13px 9px 12px;display:flex;flex-direction:column;align-items:center;background:${isWinner?'#fffaef':'#fff'};${borderRight}">
+        <div style="display:flex;align-items:center;gap:7px;justify-content:center;max-width:100%">
+          <div style="width:14px;height:14px;border-radius:5px;background:${color};flex:0 0 auto"></div>
+          <span style="font:800 13.5px Manrope;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(state.names[i])}</span>
+          ${bDotsHtml}
         </div>
-        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:9px">
-          <div style="display:flex;align-items:center;gap:9px">
-            <div style="width:14px;height:14px;border-radius:5px;background:${color};flex:0 0 auto"></div>
-            <div style="min-width:0;flex:1">
-              <div style="font:800 15.5px Manrope;line-height:1.1">${esc(state.names[i])}</div>
-              <div style="display:flex;gap:4px;margin-top:5px">${membersHtml}</div>
-            </div>
-            <div style="text-align:right;flex:0 0 auto">
-              <span style="font:800 26px Manrope;line-height:1;color:${isWinner?'#cf9a14':'#232b36'}">${total}</span>
-              <span style="font:700 12px Manrope;color:#9aa3ab"> /${WIN_TARGET}</span>
-            </div>
-          </div>
-          <div style="height:6px;border-radius:999px;background:#eef1f0;overflow:hidden">
-            <div style="height:100%;width:${pct}%;background:${isWinner?'#d9a420':color};border-radius:999px;transition:width 0.2s"></div>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:38px">
-            ${noRounds
-              ? '<span style="font:600 12px Manrope;color:#b6bdc2;padding:0 2px">No rounds yet — tap 2 / 3 / 4</span>'
-              : cellsHtml}
-          </div>
+        <div style="display:flex;gap:4px;margin-top:7px">${membersHtml}</div>
+        <div style="font:800 30px Manrope;line-height:1;color:${isWinner?'#cf9a14':'#232b36'};margin-top:8px">${total} <span style="font:700 14px Manrope;color:#9aa3ab">/${WIN_TARGET}</span></div>
+        <div style="width:100%;position:relative;display:flex;flex-direction:column;align-items:stretch;margin-top:10px;border-top:1.5px solid #eef1f0">
+          ${nearWinLine}
+          ${cellsContent}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:10px">
+          ${buttonsHtml}
         </div>
       </div>`;
   }).join('');
+
+  document.getElementById('score-cards').innerHTML = `
+    <div style="border:1px solid #e6eae6;border-radius:18px;background:#fff;overflow:hidden">
+      <div style="display:flex">
+        ${colsHtml}
+      </div>
+    </div>`;
 
   // Primary button
   const primBtn = document.getElementById('primary-action-btn');
