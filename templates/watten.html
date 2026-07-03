@@ -234,7 +234,7 @@ function doSubmit() {
   [0, 1].forEach(i => {
     add(`team_${i}_name`, state.names[i]);
     add(`team_${i}_players`, dbPlayersInTeam(i).map(p => p.id).join(','));
-    add(`team_${i}_score`, state.gamesWon[i]);
+    add(`team_${i}_score`, state.bummerl[1 - i]);
   });
   state.submitted = true;
   form.submit();
