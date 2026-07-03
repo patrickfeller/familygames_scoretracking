@@ -10,13 +10,15 @@ class WattenGame:
 
         team_scores = {}
         team_members = {}
+        valid_ids = {p['id'] for p in players}
         for i in range(team_count):
             try:
                 score = int(form_data.get(f'team_{i}_score', 0))
             except (ValueError, TypeError):
                 return False, None, None, f"Invalid score for team {i + 1}."
             raw = form_data.get(f'team_{i}_players', '')
-            pids = [int(x) for x in raw.split(',') if x.strip().lstrip('-').isdigit() and int(x) > 0]
+            pids = [int(x) for x in raw.split(',')
+                    if x.strip().lstrip('-').isdigit() and int(x) > 0 and int(x) in valid_ids]
             team_scores[i] = score
             team_members[i] = pids
 
@@ -33,8 +35,5 @@ class WattenGame:
             for pid in team_members[ti]:
                 rankings[pid] = team_rank[ti]
                 total_scores[pid] = team_scores[ti]
-
-        if not rankings:
-            return False, None, None, "No players assigned to teams."
 
         return True, rankings, total_scores, "Scores saved successfully."

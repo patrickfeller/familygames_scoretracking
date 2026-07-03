@@ -33,6 +33,7 @@ class TestWattenGame(unittest.TestCase):
 
     def test_loser_team_wins_when_higher_score(self):
         success, rankings, total_scores, msg = self.game.process_scores(self.p4, self._form(3, 11))
+        self.assertTrue(success)
         self.assertEqual(rankings[3], 1)
         self.assertEqual(rankings[1], 2)
 

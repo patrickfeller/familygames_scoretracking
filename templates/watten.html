@@ -116,7 +116,7 @@ function checkWin(rounds) {
   return null;
 }
 
-function startValid() { return [0, 1].every(i => teamPlayers(i).length > 0); }
+function startValid() { return [0, 1].every(i => dbPlayersInTeam(i).length > 0); }
 
 // ---- ACTIONS (called from onclick / event listeners) ----
 function setActive(i) { state.active = i; render(); }
@@ -184,6 +184,11 @@ function editTeams() { state.screen = 'setup'; render(); }
 
 function doSubmit() {
   if (!state.gameOver || state.submitted) return;
+  // Guard: each team must have at least one DB player to save
+  if (![0, 1].every(i => dbPlayersInTeam(i).length > 0)) {
+    alert('Each team needs at least one saved player (not a guest) to submit results.');
+    return;
+  }
   const form = document.getElementById('submit-form');
   form.querySelectorAll('input:not([name="csrf_token"])').forEach(el => el.remove());
   function add(name, value) {
