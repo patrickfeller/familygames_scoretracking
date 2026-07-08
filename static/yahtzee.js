@@ -73,9 +73,14 @@ function ytzSetTab(playerId) {
 
 function ytzRecalc(playerId) {
   let upper = 0, lower = 0;
+  let totalCount = 0, filledCount = 0, skippedCount = 0;
   document.querySelectorAll(`.score-input[data-player="${playerId}"]`).forEach(inp => {
     const row = inp.closest('.ytz-row');
-    if (row) row.classList.toggle('ytz-row--filled', inp.value !== '');
+    const skipped = !!row && row.classList.contains('ytz-row--skipped');
+    if (row) row.classList.toggle('ytz-row--filled', !skipped && inp.value !== '');
+    totalCount++;
+    if (skipped) skippedCount++;
+    else if (inp.value !== '') filledCount++;
   });
   document.querySelectorAll(`.score-input[data-player="${playerId}"][data-section="upper"]`).forEach(inp => {
     upper += parseInt(inp.value) || 0;
@@ -88,6 +93,9 @@ function ytzRecalc(playerId) {
   document.getElementById(`upper-${playerId}`).textContent = upper;
   document.getElementById(`bonus-${playerId}`).textContent = bonus;
   document.getElementById(`total-${playerId}`).textContent = upper + bonus + lower;
+
+  const openEl = document.getElementById(`open-${playerId}`);
+  if (openEl) openEl.textContent = totalCount - filledCount - skippedCount;
 }
 
 document.addEventListener('DOMContentLoaded', function () {
