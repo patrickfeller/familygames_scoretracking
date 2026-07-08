@@ -73,6 +73,10 @@ function ytzSetTab(playerId) {
 
 function ytzRecalc(playerId) {
   let upper = 0, lower = 0;
+  document.querySelectorAll(`.score-input[data-player="${playerId}"]`).forEach(inp => {
+    const row = inp.closest('.ytz-row');
+    if (row) row.classList.toggle('ytz-row--filled', inp.value !== '');
+  });
   document.querySelectorAll(`.score-input[data-player="${playerId}"][data-section="upper"]`).forEach(inp => {
     upper += parseInt(inp.value) || 0;
   });

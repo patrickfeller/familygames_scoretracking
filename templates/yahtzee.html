@@ -40,54 +40,52 @@
 
       <!-- Upper section -->
       <div class="ytz-section-label">Upper section</div>
-      {% for category in ['Ones', 'Twos', 'Threes', 'Fours', 'Fives', 'Sixes'] %}
+      {% for category, slug in [('Einer', 'ones'), ('Zweier', 'twos'), ('Dreier', 'threes'), ('Vierer', 'fours'), ('Fünfer', 'fives'), ('Sechser', 'sixes')] %}
       <div class="ytz-row">
-        <label class="ytz-row__label" for="{{ player['id'] }}_{{ category.lower() }}">{{ category }}</label>
+        <label class="ytz-row__label" for="{{ player['id'] }}_{{ slug }}">{{ category }}</label>
         <button type="button" class="touch-btn ytz-btn-dec"
-                data-player="{{ player['id'] }}" data-category="{{ category.lower() }}"
+                data-player="{{ player['id'] }}" data-category="{{ slug }}"
                 aria-label="Decrease {{ category }}">−</button>
         <input type="number"
-               id="{{ player['id'] }}_{{ category.lower() }}"
-               name="{{ player['id'] }}_{{ category.lower() }}"
+               id="{{ player['id'] }}_{{ slug }}"
+               name="{{ player['id'] }}_{{ slug }}"
                class="ytz-input score-input"
                data-player="{{ player['id'] }}"
                data-section="upper"
-               data-category="{{ category.lower() }}"
+               data-category="{{ slug }}"
                inputmode="numeric"
-               min="0"
-               placeholder="0">
+               min="0">
         <button type="button" class="touch-btn ytz-btn-inc"
-                data-player="{{ player['id'] }}" data-category="{{ category.lower() }}"
+                data-player="{{ player['id'] }}" data-category="{{ slug }}"
                 aria-label="Increase {{ category }}">＋</button>
         <button type="button" class="ytz-btn-skip"
-                data-player="{{ player['id'] }}" data-category="{{ category.lower() }}"
+                data-player="{{ player['id'] }}" data-category="{{ slug }}"
                 aria-label="Skip {{ category }}">⊘</button>
       </div>
       {% endfor %}
 
       <!-- Lower section -->
       <div class="ytz-section-label">Lower section</div>
-      {% for category in ['One Pair', 'Two Pair', 'Three of a Kind', 'Four of a Kind', 'Full House', 'Small Straight', 'Large Straight', 'Chance', 'Yahtzee'] %}
+      {% for category, slug in [('Ein Paar', 'one_pair'), ('Zwei Paar', 'two_pair'), ('Drei Gleiche', 'three_of_a_kind'), ('Vier Gleiche', 'four_of_a_kind'), ('Full House', 'full_house'), ('Kleine Straße', 'small_straight'), ('Große Straße', 'large_straight'), ('Chance', 'chance'), ('Yahtzee', 'yahtzee')] %}
       <div class="ytz-row">
-        <label class="ytz-row__label" for="{{ player['id'] }}_{{ category.lower().replace(' ', '_') }}">{{ category }}</label>
+        <label class="ytz-row__label" for="{{ player['id'] }}_{{ slug }}">{{ category }}</label>
         <button type="button" class="touch-btn ytz-btn-dec"
-                data-player="{{ player['id'] }}" data-category="{{ category.lower().replace(' ', '_') }}"
+                data-player="{{ player['id'] }}" data-category="{{ slug }}"
                 aria-label="Decrease {{ category }}">−</button>
         <input type="number"
-               id="{{ player['id'] }}_{{ category.lower().replace(' ', '_') }}"
-               name="{{ player['id'] }}_{{ category.lower().replace(' ', '_') }}"
+               id="{{ player['id'] }}_{{ slug }}"
+               name="{{ player['id'] }}_{{ slug }}"
                class="ytz-input score-input"
                data-player="{{ player['id'] }}"
                data-section="lower"
-               data-category="{{ category.lower().replace(' ', '_') }}"
+               data-category="{{ slug }}"
                inputmode="numeric"
-               min="0"
-               placeholder="0">
+               min="0">
         <button type="button" class="touch-btn ytz-btn-inc"
-                data-player="{{ player['id'] }}" data-category="{{ category.lower().replace(' ', '_') }}"
+                data-player="{{ player['id'] }}" data-category="{{ slug }}"
                 aria-label="Increase {{ category }}">＋</button>
         <button type="button" class="ytz-btn-skip"
-                data-player="{{ player['id'] }}" data-category="{{ category.lower().replace(' ', '_') }}"
+                data-player="{{ player['id'] }}" data-category="{{ slug }}"
                 aria-label="Skip {{ category }}">⊘</button>
       </div>
       {% endfor %}
