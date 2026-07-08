@@ -518,7 +518,8 @@ button, .btn-touch, [onclick] {
 .uno-medal { font: 600 12px 'Manrope',sans-serif; color: #b6bdc2; }
 
 /* ===== YAHTZEE SCORE ENTRY ===== */
-.ytz-page { padding-bottom: 80px; }
+.ytz-page { padding-bottom: 24px; }
+.ytz-submit-bottom { padding: 16px 0 8px; }
 .ytz-tabs { display: flex; gap: 8px; padding: 4px 0 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; position: sticky; top: 0; background: #fff; z-index: 5; }
 /* color: #232b36 overrides form button { color: white } */
 .ytz-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 9px 4px; border-radius: 13px; border: 2px solid #eef1f0; background: #fff; cursor: pointer; font: 700 13.5px 'Manrope',sans-serif; min-width: 80px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; color: #232b36; }
