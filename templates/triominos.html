@@ -37,7 +37,6 @@
                  name="score_{{ player.id }}_1"
                  id="score_{{ player.id }}_1"
                  class="tri-input"
-                 value="0"
                  inputmode="numeric"
                  min="0"
                  data-player="{{ player.id }}">
@@ -120,7 +119,7 @@
           <span class="avatar tri-stepper-avatar" style="background:#1f9d57">${esc(playerNames[i][0].toUpperCase())}</span>
           <span class="tri-stepper-name">${esc(playerNames[i])}</span>
           <button type="button" class="touch-btn tri-btn-dec" data-player="${pid}" data-round="${r}" aria-label="Decrease">−</button>
-          <input type="number" name="score_${pid}_${r}" id="score_${pid}_${r}" class="tri-input" value="0" inputmode="numeric" min="0" data-player="${pid}">
+          <input type="number" name="score_${pid}_${r}" id="score_${pid}_${r}" class="tri-input" inputmode="numeric" min="0" data-player="${pid}">
           <button type="button" class="touch-btn tri-btn-inc" data-player="${pid}" data-round="${r}" aria-label="Increase">＋</button>
         </div>`;
     });
