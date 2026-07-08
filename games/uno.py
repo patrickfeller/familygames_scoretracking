@@ -19,10 +19,10 @@ class UnoGame:
         for player in players:
             rank = form_data.get(f'rank_{player["id"]}')
             if rank is None or not rank.isdigit():
-                return False, None, "Please enter a valid unique ranking for each player (1 for 1st, 2 for 2nd, etc.)."
+                return False, None, None, "Please enter a valid unique ranking for each player (1 for 1st, 2 for 2nd, etc.)."
             rankings[player['id']] = int(rank)
 
         if len(set(rankings.values())) != len(players):
-            return False, None, "Each player must have a unique ranking."
+            return False, None, None, "Each player must have a unique ranking."
         
         return True, rankings, None, "Scores saved successfully."

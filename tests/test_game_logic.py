@@ -64,7 +64,7 @@ class TestGameLogic(unittest.TestCase):
             f'rank_{players[0]["id"]}': '1',
             f'rank_{players[1]["id"]}': '2'
         }
-        success, scores, message = uno_game.process_scores(players, form_data)
+        success, scores, total_scores, message = uno_game.process_scores(players, form_data)
         self.assertTrue(success)
         self.assertIn(players[0]['id'], scores)
         self.assertIn(players[1]['id'], scores)
@@ -84,10 +84,10 @@ class TestGameLogic(unittest.TestCase):
             f'rank_{players[0]["id"]}': '1',
             f'rank_{players[1]["id"]}': '1'
         }
-        success, scores, message = uno_game.process_scores(players, form_data)
+        success, scores, total_scores, message = uno_game.process_scores(players, form_data)
         self.assertFalse(success)
         self.assertIsNone(scores)
-        self.assertEqual(message, "Please enter a valid unique ranking for each player (1 for 1st, 2 for 2nd, etc.).")
+        self.assertEqual(message, "Each player must have a unique ranking.")
 
     def test_uno_game_process_scores_invalid_missing_rank(self):
         uno_game = UnoGame()
@@ -101,7 +101,7 @@ class TestGameLogic(unittest.TestCase):
             f'rank_{players[0]["id"]}': '1',
             # Missing rank for Bob
         }
-        success, scores, message = uno_game.process_scores(players, form_data)
+        success, scores, total_scores, message = uno_game.process_scores(players, form_data)
         self.assertFalse(success)
         self.assertIsNone(scores)
         self.assertEqual(message, "Please enter a valid unique ranking for each player (1 for 1st, 2 for 2nd, etc.).")
@@ -114,19 +114,20 @@ class TestGameLogic(unittest.TestCase):
             'full_house': '25', 'small_straight': '30', 'large_straight': '40', 'chance': '20', 'yahtzee': '50'
         }
         total_score = yahtzee_game.calculate_score(form_data)
-        # Expected: (1+2+3+4+5+6) + 35 (bonus) + (10+12+15+20+25+30+40+20+50) = 21 + 35 + 222 = 278
-        self.assertEqual(total_score, 278)
+        # Upper section is below the 63-point bonus threshold: (1+2+3+4+5+6) = 21, no bonus.
+        # Expected: 21 (upper) + 0 (bonus) + (10+12+15+20+25+30+40+20+50) = 21 + 0 + 222 = 243
+        self.assertEqual(total_score, 243)
 
     def test_yahtzee_game_calculate_score_with_bonus(self):
         yahtzee_game = YahtzeeGame()
         form_data = {
-            'ones': '6', 'twos': '6', 'threes': '6', 'fours': '6', 'fives': '6', 'sixes': '6',  # 36 points each, total 216
+            'ones': '5', 'twos': '10', 'threes': '15', 'fours': '20', 'fives': '25', 'sixes': '30',  # max upper score, total 105
             'one_pair': '0', 'two_pair': '0', 'three_of_a_kind': '0', 'four_of_a_kind': '0',
             'full_house': '0', 'small_straight': '0', 'large_straight': '0', 'chance': '0', 'yahtzee': '0'
         }
         total_score = yahtzee_game.calculate_score(form_data)
-        # Expected: 216 (upper) + 35 (bonus) = 251
-        self.assertEqual(total_score, 251)
+        # Expected: 105 (upper, >= 63) + 35 (bonus) = 140
+        self.assertEqual(total_score, 140)
 
     def test_add_player(self):
         add_player('Charlie')
