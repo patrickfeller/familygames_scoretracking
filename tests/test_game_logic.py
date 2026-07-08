@@ -45,6 +45,12 @@ class TestGameLogic(unittest.TestCase):
         conn.commit()
         conn.close()
 
+    def test_base_template_includes_fullscreen_toggle(self):
+        response = self.app.get('/')
+        self.assertIn(b'id="fullscreenToggle"', response.data)
+        self.assertIn(b'aria-pressed="false"', response.data)
+        self.assertIn(b'main.js', response.data)
+
     def test_uno_game_process_scores_valid(self):
         uno_game = UnoGame()
         # Add test players

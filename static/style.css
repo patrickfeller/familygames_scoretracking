@@ -15,6 +15,7 @@ header {
     padding: 15px 0;
     text-align: center;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    position: relative;
 }
 
 header h1 {
@@ -38,6 +39,43 @@ nav a {
 
 nav a:hover {
     background-color: #34495e;
+}
+
+.fullscreen-toggle {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid rgba(236, 240, 241, 0.4);
+    border-radius: 8px;
+    color: #ecf0f1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fullscreen-toggle:hover {
+    background: rgba(236, 240, 241, 0.15);
+}
+
+.fullscreen-toggle[hidden] {
+    display: none;
+}
+
+.fullscreen-toggle .icon-compress {
+    display: none;
+}
+
+.fullscreen-toggle[aria-pressed="true"] .icon-expand {
+    display: none;
+}
+
+.fullscreen-toggle[aria-pressed="true"] .icon-compress {
+    display: block;
 }
 
 /* Main Content Area */
